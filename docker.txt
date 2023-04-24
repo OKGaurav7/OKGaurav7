@@ -1,0 +1,24 @@
+doker folder banaya
+usme hello.php and Dockerfile bana, code hai
+
+docker ko chalu kar
+cmd khol
+   docker login(u will get username)
+    
+
+open vsc terminal;
+               docker build . -t kaif47/doker
+               //inside docker, doker file will be created
+               docker run --name=php -p=6969 kaif47/doker
+               //inside docker container php will be created
+
+//new html file bana hello world ke liye;usko open kar folder ke through
+?.....................?
+
+open cmd 
+-docker login
+-docker pull ubuntu 
+-docker run -it -d ubuntu
+-tag ubuntu kaif47/ubuntu
+-docker push kaif47/ubuntu
+-docker ps
