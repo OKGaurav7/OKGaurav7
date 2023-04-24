@@ -23,4 +23,5 @@ time.sleep(3)
 driver.close()
 print("sample test case successfully completed")
 
-#indide rider make driver folder and pyfile folder; in driver keep the driver content and in pyfile keep this code and run
+# inside rider make driver folder and pyfile folder; in driver keep the driver content and in pyfile keep this code and run 
+# https://chromedriver.storage.googleapis.com/index.html?path=113.0.5672.24/
