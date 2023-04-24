@@ -1,0 +1,21 @@
+FROM php
+COPY ./hello.php ./
+EXPOSE 6969
+CMD["php","-S","0.0.0.0.6969"]
+
+
+
+//
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>My first PHP page</h1>
+
+<?php
+echo "Hello World!";
+?>
+
+</body>
+</html>
