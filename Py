@@ -1,17 +1,13 @@
 import pandas as pd
 
-# Read the previous output Excel file
-previous_output_df = pd.read_excel('output.xlsx')
+# Read the output Excel file
+output_df = pd.read_excel('output.xlsx')
 
-# Select the "Counterparty Name" column
-counterparty_names = previous_output_df['counterparty names']
+# Select only the 'Counterparty Name' column
+counterparty_df = output_df[['counterparty names']]
 
-# Create a DataFrame with the "Counterparty Name" column
-new_df = pd.DataFrame({'Counterparty Name': counterparty_names})
+# Create a new DataFrame with the 'Counterparty Name' column and empty columns vd, vd1, vd2, vd3, vd4, vd5, vd6, vd7
+new_df = counterparty_df.assign(vd='', vd1='', vd2='', vd3='', vd4='', vd5='', vd6='', vd7='')
 
-# Add new columns vd, vd1, vd2, ..., vd7
-for i in range(8):
-    new_df[f'vd{i}'] = ''
-
-# Write the DataFrame to a new CSV file
+# Write the new DataFrame to a CSV file
 new_df.to_csv('new_output.csv', index=False)
