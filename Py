@@ -1,12 +1,14 @@
 import pandas as pd
 
-# Load the CSV file into a Pandas DataFrame
-df = pd.read_csv("abc.csv")
+# Read the CSV file
+df = pd.read_csv('abc.csv')
 
-# Split the DataFrame into two separate DataFrames based on the "operation type" column
-buy_df = df[df["operation type"] == "Buy"]
-sell_df = df[df["operation type"] == "Sell"]
+# Split the data into two dataframes based on the "operation type" column
+buy_df = df[df['operation type'] == 'Buy']
+sell_df = df[df['operation type'] == 'Sell']
 
-# Save the two DataFrames to separate Excel files
-buy_df.to_excel("buy_data.xlsx", index=False)
-sell_df.to_excel("sell_data.xlsx", index=False)
+# Write the dataframes to separate Excel files
+buy_df.to_excel('buy_data.xlsx', index=False, sheet_name='Buy')
+sell_df.to_excel('sell_data.xlsx', index=False, sheet_name='Sell')
+
+print("Files 'buy_data.xlsx' and 'sell_data.xlsx' have been created.")
