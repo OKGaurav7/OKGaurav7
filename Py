@@ -1,18 +1,7 @@
-# Get the index of the "trade price" column
-trade_price_index = buy_df.columns.get_loc('trade price') + 1
+import datetime
 
-# Insert new columns after the "trade price" column
-buy_df.insert(trade_price_index, 'CBBT_PX_ASK', '')
-buy_df.insert(trade_price_index + 1, 'Economic Impact', '')
-buy_df.insert(trade_price_index + 2, 'LQA(Lip Score)', '')
-buy_df.insert(trade_price_index + 3, 'Days elapsed', '')
-
-# Repeat the process for the sell DataFrame
-sell_df.insert(trade_price_index, 'CBBT_PX_ASK', '')
-sell_df.insert(trade_price_index + 1, 'Economic Impact', '')
-sell_df.insert(trade_price_index + 2, 'LQA(Lip Score)', '')
-sell_df.insert(trade_price_index + 3, 'Days elapsed', '')
+# Add the Days Elapsed column with the Excel formula
+buy_df['Days elapsed'] = buy_df['value date'].apply(lambda x: datetime.datetime.now().date() - x - datetime.timedelta(days=1) if pd.notnull(x) else '')
 
 # Write the modified DataFrames to separate Excel files
 buy_df.to_excel('buy_data.xlsx', index=False, sheet_name='Buy')
-sell_df.to_excel('sell_data.xlsx', index=False, sheet_name='Sell')
