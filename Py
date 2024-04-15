@@ -1,13 +1,11 @@
-import pandas as pd
+# Filter rows where operation type is 'buy'
+buy_df = output_df[output_df['operation type(buy or sell)'] == 'buy']
 
-# Read the output Excel file
-output_df = pd.read_excel('output.xlsx')
+# Save the 'buy' data to a CSV file
+buy_df.to_csv('buy_data.csv', index=False)
 
-# Select only the 'Counterparty Name' column
-counterparty_df = output_df[['counterparty names']]
+# Filter rows where operation type is 'sell'
+sell_df = output_df[output_df['operation type(buy or sell)'] == 'sell']
 
-# Create a new DataFrame with the 'Counterparty Name' column and empty columns vd, vd1, vd2, vd3, vd4, vd5, vd6, vd7
-new_df = counterparty_df.assign(vd='', vd1='', vd2='', vd3='', vd4='', vd5='', vd6='', vd7='')
-
-# Write the new DataFrame to a CSV file
-new_df.to_csv('new_output.csv', index=False)
+# Save the 'sell' data to a CSV file
+sell_df.to_csv('sell_data.csv', index=False)
