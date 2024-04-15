@@ -1,14 +1,9 @@
-import pandas as pd
+# Filter data where operation type is Buy
+buy_df = output_df[output_df['operation type(buy or sell)'].str.contains('Buy', case=False)]
 
-# Read the CSV file
-df = pd.read_csv('abc.csv')
+# Filter data where operation type is Sell
+sell_df = output_df[output_df['operation type(buy or sell)'].str.contains('Sell', case=False)]
 
-# Split the data into two dataframes based on the "operation type" column
-buy_df = df[df['operation type'] == 'Buy']
-sell_df = df[df['operation type'] == 'Sell']
-
-# Write the dataframes to separate Excel files
+# Write the filtered DataFrames to separate Excel files
 buy_df.to_excel('buy_data.xlsx', index=False, sheet_name='Buy')
 sell_df.to_excel('sell_data.xlsx', index=False, sheet_name='Sell')
-
-print("Files 'buy_data.xlsx' and 'sell_data.xlsx' have been created.")
