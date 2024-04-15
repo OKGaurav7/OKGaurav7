@@ -1,28 +1,17 @@
-
 import pandas as pd
 
 # Read the previous output Excel file
 previous_output_df = pd.read_excel('output.xlsx')
 
-# Calculate the maximum difference between trade date and value date
-max_diff = (previous_output_df['value date'] - previous_output_df['trade date']).max().days
+# Select the "Counterparty Name" column
+counterparty_names = previous_output_df['counterparty names']
 
-# Create a DataFrame to store the data for the new CSV file
-new_csv_df = pd.DataFrame(columns=['Counter party name'] + [f'vd{i}' for i in range(max_diff + 1)])
+# Create a DataFrame with the "Counterparty Name" column
+new_df = pd.DataFrame({'Counterparty Name': counterparty_names})
 
-# Populate the 'Counter party name' column
-new_csv_df['Counter party name'] = previous_output_df['counterparty names']
-
-# Populate the 'vd' columns with NaN values
-for i in range(max_diff + 1):
-    new_csv_df[f'vd{i}'] = pd.NA
-
-# Iterate through each row and fill in the 'vd' columns accordingly
-for index, row in previous_output_df.iterrows():
-    trade_date = row['trade date']
-    value_date = row['value date']
-    diff_days = (value_date - trade_date).days
-    new_csv_df.loc[index, f'vd{diff_days}'] = value_date
+# Add new columns vd, vd1, vd2, ..., vd7
+for i in range(8):
+    new_df[f'vd{i}'] = ''
 
 # Write the DataFrame to a new CSV file
-new_csv_df.to_csv('new_output.csv', index=False)
+new_df.to_csv('new_output.csv', index=False)
