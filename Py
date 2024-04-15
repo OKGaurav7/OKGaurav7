@@ -1,7 +1,14 @@
 import datetime
 
-# Add the Days Elapsed column with the Excel formula
-buy_df['Days elapsed'] = buy_df['value date'].apply(lambda x: datetime.datetime.now().date() - x - datetime.timedelta(days=1) if pd.notnull(x) else '')
+# Calculate today's date
+today_date = datetime.datetime.now().date()
+
+# Add the 'Days elapsed' column to the buy DataFrame
+buy_df['Days elapsed'] = buy_df['value date'].apply(lambda x: '' if pd.isna(x) else max(today_date - x, datetime.timedelta(0)).days - 1)
+
+# Add the 'Days elapsed' column to the sell DataFrame
+sell_df['Days elapsed'] = sell_df['value date'].apply(lambda x: '' if pd.isna(x) else max(today_date - x, datetime.timedelta(0)).days - 1)
 
 # Write the modified DataFrames to separate Excel files
 buy_df.to_excel('buy_data.xlsx', index=False, sheet_name='Buy')
+sell_df.to_excel('sell_data.xlsx', index=False, sheet_name='Sell')
