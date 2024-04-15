@@ -1,9 +1,15 @@
-# Filter data where operation type is Buy
-buy_df = output_df[output_df['operation type(buy or sell)'].str.contains('Buy', case=False)]
+# Add new columns to the buy DataFrame
+buy_df['CBBT_PX_ASK'] = ''
+buy_df['Economic Impact'] = ''
+buy_df['LQA(Lip Score)'] = ''
+buy_df['Days elapsed'] = ''
 
-# Filter data where operation type is Sell
-sell_df = output_df[output_df['operation type(buy or sell)'].str.contains('Sell', case=False)]
+# Add new columns to the sell DataFrame
+sell_df['CBBT_PX_ASK'] = ''
+sell_df['Economic Impact'] = ''
+sell_df['LQA(Lip Score)'] = ''
+sell_df['Days elapsed'] = ''
 
-# Write the filtered DataFrames to separate Excel files
+# Write the modified DataFrames to separate Excel files
 buy_df.to_excel('buy_data.xlsx', index=False, sheet_name='Buy')
 sell_df.to_excel('sell_data.xlsx', index=False, sheet_name='Sell')
