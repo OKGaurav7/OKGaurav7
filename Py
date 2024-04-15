@@ -4,8 +4,5 @@ buy_df = output_df[output_df['operation type(buy or sell)'] == 'buy']
 # Save the 'buy' data to a CSV file
 buy_df.to_csv('buy_data.csv', index=False)
 
-# Filter rows where operation type is 'sell'
-sell_df = output_df[output_df['operation type(buy or sell)'] == 'sell']
-
-# Save the 'sell' data to a CSV file
-sell_df.to_csv('sell_data.csv', index=False)
+# Display the first few rows of the 'buy' data
+buy_df.head()
