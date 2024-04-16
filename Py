@@ -1,23 +1,47 @@
 import pandas as pd
-import xlrd
+from openpyxl import load_workbook
 
-# Load the master Excel file
+# Read the master Excel file
 master_df = pd.read_excel('master.xlsx')
 
-# Get the header names with red fill color
-red_headers = []
-workbook = xlrd.open_workbook('master.xlsx')
-worksheet = workbook.sheet_by_index(0)  # Assuming the data is in the first sheet
+selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
+output_df = master_df[selected_columns]
 
-for col_index in range(worksheet.ncols):
-    cell = worksheet.cell(0, col_index)
-    if cell.xf_index > 0:
-        cell_format = workbook.xf_list[cell.xf_index]
-        if cell_format.background.pattern_colour_index == 2:  # Red fill color
-            red_headers.append(cell.value)
+# Define new columns
+new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
-# Filter the DataFrame to include only the columns with red headers
-output_df = master_df[red_headers]
+# Insert new columns after "Trade Price"
+output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
 
-# Save the filtered DataFrame to a CSV file
-output_df.to_csv('output.csv', index=False)
+# Add dummy data to new columns
+import random
+output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
+output_df['Economic Impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+output_df['Days Elapsed'] = [random.randint(1, 30) for _ in range(len(output_df))]
+
+# Convert 'Trade Date' and 'Value Date' to string format
+output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
+
+# Convert 'Value Date' to datetime format
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+
+# Calculate days elapsed
+today = pd.to_datetime('today')
+output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+
+# Save DataFrame to Excel file
+output_filename = 'output.xlsx'
+output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
+
+# Open the Excel file
+wb = load_workbook(output_filename)
+ws = wb.active
+
+# Set header cells background color to red
+for cell in ws[1]:
+    cell.fill = openpyxl.styles.PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+
+# Save the modified Excel file
+wb.save(output_filename)
