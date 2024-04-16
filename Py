@@ -1,64 +1,39 @@
+IllegalCharacterError                     Traceback (most recent call last)
+Cell In[16], line 3
+      1 # Write data to the Excel file
+      2 for row in output_df.itertuples(index=False, name=None):
+----> 3     ws.append(tuple(row))
 
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill
-from openpyxl.styles.differential import DifferentialStyle
-from openpyxl.formatting.rule import Rule
-import pandas as pd
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/worksheet/worksheet.py:665, in Worksheet.append(self, iterable)
+    663             cell.row = row_idx
+    664         else:
+--> 665             cell = Cell(self, row=row_idx, column=col_idx, value=content)
+    666         self._cells[(row_idx, col_idx)] = cell
+    668 elif isinstance(iterable, dict):
 
-# Read the master csv file
-master_df = pd.read_csv('master.csv')
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:116, in Cell.__init__(self, worksheet, row, column, value, style_array)
+    114 self.data_type = 'n'
+    115 if value is not None:
+--> 116     self.value = value
+    117 self._comment = None
 
-# Select the specified columns
-selected_columns = [
-    'counterparty names', 
-    'operation type(buy or sell)', 
-    'trade date', 
-    'trade price', 
-    'value date', 
-    'primary original quantity', 
-    'settlement instrument name', 
-    'isin reference', 
-    'primary instrument long name', 
-    'smoothly trade reference', 
-    'internal status narrative', 
-    'sales person name'
-]
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:215, in Cell.value(self, value)
+    212 @value.setter
+    213 def value(self, value):
+    214     """Set the value and infer type and display options."""
+--> 215     self._bind_value(value)
 
-# Create a new DataFrame with only the selected columns
-output_df = master_df[selected_columns]
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:194, in Cell._bind_value(self, value)
+    191         self.number_format = get_time_format(t)
+    193 elif dt == "s":
+--> 194     value = self.check_string(value)
+    195     if len(value) > 1 and value.startswith("="):
+    196         self.data_type = 'f'
 
-# Define new columns
-new_columns = ['CBT', 'economic impact', 'LQA', 'days elapsed']
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:162, in Cell.check_string(self, value)
+    160 value = value[:32767]
+    161 if next(ILLEGAL_CHARACTERS_RE.finditer(value), None):
+--> 162     raise IllegalCharacterError
+    163 return value
 
-# Insert new columns after "Trade Price"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
-
-# Add dummy data to new columns
-import random
-output_df['CBT'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['economic impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
-output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len(output_df))]
-
-# Convert 'value date' to datetime format
-output_df['value date'] = pd.to_datetime(output_df['value date'])
-
-# Calculate days elapsed
-from datetime import datetime
-today = datetime.today()
-output_df['days elapsed'] = (today - output_df['value date']).dt.days - 1
-
-# Write the DataFrame to a new Excel file with red headers
-wb = Workbook()
-ws = wb.active
-
-# Write headers with red font color
-for col_num, value in enumerate(output_df.columns.values, 1):
-    cell = ws.cell(row=1, column=col_num, value=str(value))
-    cell.font = Font(color="FF0000")  # Red font color
-
-# Write data to the Excel file
-for row in output_df.itertuples(index=False, name=None):
-    ws.append(row)
-
-# Save the Excel file
-wb.save('output.xlsx')
+IllegalCharacterError: 
