@@ -1,16 +1,20 @@
 import pandas as pd
-from openpyxl import load_workbook
+import xlrd
 
 # Load the master Excel file
 master_df = pd.read_excel('master.xlsx')
 
 # Get the header names with red fill color
 red_headers = []
-wb = load_workbook('master.xlsx')
-ws = wb.active
-for cell in ws[1]:
-    if cell.fill.bgColor.rgb == "FFFF0000":  # Check if fill color is red
-        red_headers.append(cell.value)
+workbook = xlrd.open_workbook('master.xlsx')
+worksheet = workbook.sheet_by_index(0)  # Assuming the data is in the first sheet
+
+for col_index in range(worksheet.ncols):
+    cell = worksheet.cell(0, col_index)
+    if cell.xf_index > 0:
+        cell_format = workbook.xf_list[cell.xf_index]
+        if cell_format.background.pattern_colour_index == 2:  # Red fill color
+            red_headers.append(cell.value)
 
 # Filter the DataFrame to include only the columns with red headers
 output_df = master_df[red_headers]
