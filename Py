@@ -9,9 +9,8 @@ output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 # Extract unique counterparty names
 unique_counterparties = output_df['Counterparty Name'].unique()
 
-# Create a new DataFrame to store the aggregated data
-new_columns = ['Counterparty Name', 'Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+7', 'Vd>7', 'Total Fails', 'Overall Economic Impact']
-new_excel_df = pd.DataFrame(columns=new_columns)
+# Create an empty list to store DataFrames for each counterparty
+dfs = []
 
 # Iterate over unique counterparty names
 for counterparty in unique_counterparties:
@@ -33,20 +32,26 @@ for counterparty in unique_counterparties:
     # Calculate overall economic impact
     overall_economic_impact = cp_data['Economic Impact'].sum()
     
-    # Append data to the new DataFrame
-    new_excel_df = new_excel_df.append({
-        'Counterparty Name': counterparty,
-        'Vd': vd,
-        'Vd+1': vd_plus_1,
-        'Vd+2': vd_plus_2,
-        'Vd+3': vd_plus_3,
-        'Vd+4': vd_plus_4,
-        'Vd+5': vd_plus_5,
-        'Vd+7': vd_plus_7,
-        'Vd>7': vd_gt_7,
-        'Total Fails': total_fails,
-        'Overall Economic Impact': overall_economic_impact
-    }, ignore_index=True)
+    # Create a DataFrame for the current counterparty
+    cp_df = pd.DataFrame({
+        'Counterparty Name': [counterparty],
+        'Vd': [vd],
+        'Vd+1': [vd_plus_1],
+        'Vd+2': [vd_plus_2],
+        'Vd+3': [vd_plus_3],
+        'Vd+4': [vd_plus_4],
+        'Vd+5': [vd_plus_5],
+        'Vd+7': [vd_plus_7],
+        'Vd>7': [vd_gt_7],
+        'Total Fails': [total_fails],
+        'Overall Economic Impact': [overall_economic_impact]
+    })
+    
+    # Append the DataFrame to the list
+    dfs.append(cp_df)
+
+# Concatenate all DataFrames in the list
+new_excel_df = pd.concat(dfs, ignore_index=True)
 
 # Save the new DataFrame to a new Excel file
 new_excel_df.to_excel('new_excel.xlsx', index=False)
