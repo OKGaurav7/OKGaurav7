@@ -1,5 +1,7 @@
+
 import pandas as pd
-from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 # Read the master Excel file
 master_df = pd.read_excel('master.xlsx')
@@ -39,8 +41,22 @@ output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len
 output_df['value date'] = pd.to_datetime(output_df['value date'])
 
 # Calculate days elapsed
+from datetime import datetime
 today = datetime.today()
 output_df['days elapsed'] = (today - output_df['value date']).dt.days - 1
 
-# Write the DataFrame to a new Excel file
-output_df.to_excel('output.xlsx', index=False, sheet_name='Sheet1')
+# Write the DataFrame to a new Excel file with red headers
+wb = Workbook()
+ws = wb.active
+
+# Write headers with red font color
+for col_num, value in enumerate(output_df.columns.values, 1):
+    cell = ws.cell(row=1, column=col_num, value=value)
+    cell.font = Font(color="FF0000")  # Red font color
+
+# Write data to the Excel file
+for row in output_df.itertuples(index=False, name=None):
+    ws.append(row)
+
+# Save the Excel file
+wb.save('output.xlsx')
