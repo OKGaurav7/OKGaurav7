@@ -1,5 +1,6 @@
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 # Read the master Excel file
 master_df = pd.read_excel('master.xlsx')
@@ -41,7 +42,7 @@ ws = wb.active
 
 # Set header cells background color to red
 for cell in ws[1]:
-    cell.fill = openpyxl.styles.PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
 
 # Save the modified Excel file
 wb.save(output_filename)
