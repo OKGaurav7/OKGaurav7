@@ -1,36 +1,52 @@
 import pandas as pd
-master_df=pd.read_excel('master.xlsx')
-selected_columns=['Counterparty Name','Operation Type','Trade Date','Trade Price','Value Date','Primary Original Quantity','Settlement Instrument Name','ISIN Primary Instrument Reference','Primary Instrument Long Name','SMO Trade Reference','Internal Status Narrative','Sales Person Name']
-output_df=master_df[selected_columns]
 
+# Read the output.csv file into a DataFrame
+output_df = pd.read_csv('output.csv')
 
-# Define new columns
-new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
-
-# Insert new columns after "Trade Price"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
-
-# Add dummy data to new columns
-import random
-output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['Economic Impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
-output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
-output_df['Days Elapsed'] = [random.randint(1, 30) for _ in range(len(output_df))]
-
-
-
-output_df['Trade Date']=pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
-output_df['Value Date']=pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
-
-
-# Convert 'value date' to datetime format
+# Convert 'Value Date' to datetime format
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 
-# Calculate days elapsed
-today = datetime.today()
-output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+# Extract unique counterparty names
+unique_counterparties = output_df['Counterparty Name'].unique()
 
+# Create a new DataFrame to store the aggregated data
+new_columns = ['Counterparty Name', 'Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+7', 'Vd>7', 'Total Fails', 'Overall Economic Impact']
+new_excel_df = pd.DataFrame(columns=new_columns)
 
-output_df.to_csv('output.csv', index=False)
-#print(output_df)
-#output_df
+# Iterate over unique counterparty names
+for counterparty in unique_counterparties:
+    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    
+    # Calculate values for each date range
+    vd = len(cp_data)
+    vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+    vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+    vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+    vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+    vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+    vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+    vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+    
+    # Calculate total fails
+    total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    
+    # Calculate overall economic impact
+    overall_economic_impact = cp_data['Economic Impact'].sum()
+    
+    # Append data to the new DataFrame
+    new_excel_df = new_excel_df.append({
+        'Counterparty Name': counterparty,
+        'Vd': vd,
+        'Vd+1': vd_plus_1,
+        'Vd+2': vd_plus_2,
+        'Vd+3': vd_plus_3,
+        'Vd+4': vd_plus_4,
+        'Vd+5': vd_plus_5,
+        'Vd+7': vd_plus_7,
+        'Vd>7': vd_gt_7,
+        'Total Fails': total_fails,
+        'Overall Economic Impact': overall_economic_impact
+    }, ignore_index=True)
+
+# Save the new DataFrame to a new Excel file
+new_excel_df.to_excel('new_excel.xlsx', index=False)
