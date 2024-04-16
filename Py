@@ -1,78 +1,36 @@
 import pandas as pd
-from datetime import datetime
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
+master_df=pd.read_excel('master.xlsx')
+selected_columns=['Counterparty Name','Operation Type','Trade Date','Trade Price','Value Date','Primary Original Quantity','Settlement Instrument Name','ISIN Primary Instrument Reference','Primary Instrument Long Name','SMO Trade Reference','Internal Status Narrative','Sales Person Name']
+output_df=master_df[selected_columns]
 
-# Read the master Excel file
-master_df = pd.read_excel('master.xlsx')
-
-# Select the specified columns
-selected_columns = [
-    'counterparty names', 
-    'operation type(buy or sell)', 
-    'trade date', 
-    'trade price', 
-    'value date', 
-    'primary original quantity', 
-    'settlement instrument name', 
-    'isin reference', 
-    'primary instrument long name', 
-    'smoothly trade reference', 
-    'internal status narrative', 
-    'sales person name'
-]
-
-# Create a new DataFrame with only the selected columns
-output_df = master_df[selected_columns]
 
 # Define new columns
-new_columns = ['CBT', 'economic impact', 'LQA', 'days elapsed']
+new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
 # Insert new columns after "Trade Price"
 output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
 
 # Add dummy data to new columns
 import random
-output_df['CBT'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['economic impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
-output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len(output_df))]
+output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
+output_df['Economic Impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+output_df['Days Elapsed'] = [random.randint(1, 30) for _ in range(len(output_df))]
+
+
+
+output_df['Trade Date']=pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+output_df['Value Date']=pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
+
 
 # Convert 'value date' to datetime format
-output_df['value date'] = pd.to_datetime(output_df['value date'])
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 
 # Calculate days elapsed
 today = datetime.today()
-output_df['days elapsed'] = (today - output_df['value date']).dt.days - 1
+output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
 
-# Write the DataFrame to a new Excel file
-output_filename = 'output.xlsx'
-output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
 
-# Email settings
-sender_email = "your_email@gmail.com"
-receiver_email = "recipient_email@gmail.com"
-subject = "Output Excel File"
-body = "Please find the attached output Excel file."
-
-# Send email with attachment
-msg = MIMEMultipart()
-msg['From'] = sender_email
-msg['To'] = receiver_email
-msg['Subject'] = subject
-msg.attach(MIMEText(body, 'plain'))
-
-attachment = open(output_filename, "rb")
-part = MIMEBase('application', 'octet-stream')
-part.set_payload((attachment).read())
-encoders.encode_base64(part)
-part.add_header('Content-Disposition', "attachment; filename= %s" % output_filename)
-msg.attach(part)
-
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.starttls()
-server.login(sender_email, "your_password")
-text = msg.as_string()
-server.sendmail(sender_email, receiver_email, text)
-server.quit()
+output_df.to_csv('output.csv', index=False)
+#print(output_df)
+#output_df
