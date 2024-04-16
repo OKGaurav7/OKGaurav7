@@ -1,7 +1,4 @@
-IllegalCharacterError                     Traceback (most recent call last)
-Cell In[8], line 49
-     47 for row_idx, row in enumerate(output_df.values, 2):
-     48     for col_idx, value in enumerate(row, 1):
----> 49         ws.cell(row=row_idx, column=col_idx, value=str(value))
-     51 # Save the Excel file
-     52 wb.save('output.xlsx')
+# Write data to the Excel file
+for row_idx, row in enumerate(output_df.values, 2):
+    for col_idx, value in enumerate(row, 1):
+        ws.cell(row=row_idx, column=col_idx).value = str(value).encode('utf-8', 'ignore').decode('utf-8')
