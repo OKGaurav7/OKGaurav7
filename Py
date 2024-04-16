@@ -1,5 +1,5 @@
-
 import pandas as pd
+from datetime import datetime
 
 # Read the master Excel file
 master_df = pd.read_excel('master.xlsx')
@@ -34,7 +34,10 @@ import random
 output_df['CBT'] = [random.randint(1, 100) for _ in range(len(output_df))]
 output_df['economic impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
 output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len(output_df))]
-output_df['days elapsed'] = [random.randint(1, 30) for _ in range(len(output_df))]
+
+# Calculate days elapsed
+today = datetime.today()
+output_df['days elapsed'] = (today - output_df['value date']).dt.days - 1
 
 # Write the DataFrame to a new Excel file
 output_df.to_excel('output.xlsx', index=False, sheet_name='Sheet1')
