@@ -1,3 +1,10 @@
-# Write data to the Excel file
-for row in output_df.itertuples(index=False, name=None):
-    ws.append(row)
+>>> from openpyxl.styles import PatternFill
+>>> from openpyxl.styles.differential import DifferentialStyle
+>>> from openpyxl.formatting.rule import Rule
+
+>>> red_background = PatternFill(fgColor="00FF0000")
+>>> diff_style = DifferentialStyle(fill=red_background)
+>>> rule = Rule(type="expression", dxf=diff_style)
+>>> rule.formula = ["$H1<3"]
+>>> sheet.conditional_formatting.add("A1:O100", rule)
+>>> workbook.save("sample_conditional_formatting.xlsx")
