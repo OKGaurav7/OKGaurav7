@@ -51,12 +51,13 @@ ws = wb.active
 
 # Write headers with red font color
 for col_num, value in enumerate(output_df.columns.values, 1):
-    cell = ws.cell(row=1, column=col_num, value=value)
+    cell = ws.cell(row=1, column=col_num, value=str(value))
     cell.font = Font(color="FF0000")  # Red font color
 
 # Write data to the Excel file
-for row in output_df.itertuples(index=False, name=None):
-    ws.append(row)
+for row_idx, row in enumerate(output_df.values, 2):
+    for col_idx, value in enumerate(row, 1):
+        ws.cell(row=row_idx, column=col_idx, value=value)
 
 # Save the Excel file
 wb.save('output.xlsx')
