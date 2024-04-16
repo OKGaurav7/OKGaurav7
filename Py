@@ -42,16 +42,10 @@ for cell in ws[1]:
     cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
 
 # Auto adjust column widths
-for column in ws.columns:
-    max_length = 0
-    for cell in column:
-        try:
-            if len(str(cell.value)) > max_length:
-                max_length = len(str(cell.value))
-        except:
-            pass
+for col_num, column in enumerate(output_df.columns, 1):
+    max_length = max(output_df[column].astype(str).map(len).max(), len(column))
     adjusted_width = (max_length + 2) * 1.2
-    ws.column_dimensions[get_column_letter(column[0].column)].width = adjusted_width
+    ws.column_dimensions[get_column_letter(col_num)].width = adjusted_width
 
 # Save the modified Excel file
 wb.save(output_filename)
