@@ -35,6 +35,9 @@ output_df['CBT'] = [random.randint(1, 100) for _ in range(len(output_df))]
 output_df['economic impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
 output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len(output_df))]
 
+# Convert 'value date' to datetime format
+output_df['value date'] = pd.to_datetime(output_df['value date'])
+
 # Calculate days elapsed
 today = datetime.today()
 output_df['days elapsed'] = (today - output_df['value date']).dt.days - 1
