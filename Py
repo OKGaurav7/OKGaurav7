@@ -29,5 +29,12 @@ new_columns = ['CBT', 'economic impact', 'LQA', 'days elapsed']
 # Insert new columns after "Trade Price"
 output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
 
+# Add dummy data to new columns
+import random
+output_df['CBT'] = [random.randint(1, 100) for _ in range(len(output_df))]
+output_df['economic impact'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+output_df['LQA'] = [random.choice(['Good', 'Bad', 'Neutral']) for _ in range(len(output_df))]
+output_df['days elapsed'] = [random.randint(1, 30) for _ in range(len(output_df))]
+
 # Write the DataFrame to a new Excel file
 output_df.to_excel('output.xlsx', index=False, sheet_name='Sheet1')
