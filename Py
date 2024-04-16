@@ -1,6 +1,6 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Border, Side
 from datetime import datetime
 
 # Read the master CSV file
@@ -41,7 +41,7 @@ for cell in ws[1]:
     cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
 
 # Set conditional formatting
-red_fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+red_fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
 
 # Economic Impact column
 for i, value in enumerate(output_df['Economic Impact'], start=2):
@@ -52,6 +52,16 @@ for i, value in enumerate(output_df['Economic Impact'], start=2):
 for i, value in enumerate(output_df['Days Elapsed'], start=2):
     if value > 7:
         ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1).fill = red_fill
+
+# Add cell borders to all cells
+border = Border(left=Side(border_style='thin', color='000000'),
+                right=Side(border_style='thin', color='000000'),
+                top=Side(border_style='thin', color='000000'),
+                bottom=Side(border_style='thin', color='000000'))
+
+for row in ws.iter_rows():
+    for cell in row:
+        cell.border = border
 
 # Save the modified Excel file
 wb.save(output_filename)
