@@ -1,11 +1,14 @@
 import tabula
 import pandas as pd
-tables=tabula.read_pdf('sample.pdf',pages='all',multiple_tables=True)
+
+# Prompt the user to input the path or URL of the PDF file
+pdf_file = input("Enter the path or URL of the PDF file: ")
+
+tables = tabula.read_pdf(pdf_file, pages='all', multiple_tables=True)
 
 if tables:
-    merged_df=pd.concat(tables)
-    #merged_df=pd.concat(tables)
-    merged_df.to_excel('output.xlsx',index=False)
-    print("successful")
+    merged_df = pd.concat(tables)
+    merged_df.to_excel('output.xlsx', index=False)
+    print("Extraction and merging successful. Output saved to output.xlsx")
 else:
-    print("not")
+    print("No tables found in the PDF.")
