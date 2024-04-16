@@ -12,6 +12,10 @@ unique_counterparties = output_df['Counterparty Name'].unique()
 # Create an empty list to store DataFrames for each counterparty
 dfs = []
 
+# Initialize variables for sum of total fails and overall economic impact
+total_fails_sum = 0
+overall_economic_impact_sum = 0
+
 # Iterate over unique counterparty names
 for counterparty in unique_counterparties:
     cp_data = output_df[output_df['Counterparty Name'] == counterparty]
@@ -28,9 +32,11 @@ for counterparty in unique_counterparties:
     
     # Calculate total fails
     total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    total_fails_sum += total_fails
     
     # Calculate overall economic impact
     overall_economic_impact = cp_data['Economic Impact'].sum()
+    overall_economic_impact_sum += overall_economic_impact
     
     # Create a DataFrame for the current counterparty
     cp_df = pd.DataFrame({
@@ -52,6 +58,9 @@ for counterparty in unique_counterparties:
 
 # Concatenate all DataFrames in the list
 new_excel_df = pd.concat(dfs, ignore_index=True)
+
+# Append the sum of total fails and overall economic impact at the end
+new_excel_df.loc[len(new_excel_df)] = ['Total', '', '', '', '', '', '', '', '', total_fails_sum, overall_economic_impact_sum]
 
 # Save the new DataFrame to a new Excel file
 new_excel_df.to_excel('new_excel.xlsx', index=False)
