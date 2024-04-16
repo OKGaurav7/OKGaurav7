@@ -1,39 +1,4 @@
-IllegalCharacterError                     Traceback (most recent call last)
-Cell In[16], line 3
-      1 # Write data to the Excel file
-      2 for row in output_df.itertuples(index=False, name=None):
-----> 3     ws.append(tuple(row))
-
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/worksheet/worksheet.py:665, in Worksheet.append(self, iterable)
-    663             cell.row = row_idx
-    664         else:
---> 665             cell = Cell(self, row=row_idx, column=col_idx, value=content)
-    666         self._cells[(row_idx, col_idx)] = cell
-    668 elif isinstance(iterable, dict):
-
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:116, in Cell.__init__(self, worksheet, row, column, value, style_array)
-    114 self.data_type = 'n'
-    115 if value is not None:
---> 116     self.value = value
-    117 self._comment = None
-
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:215, in Cell.value(self, value)
-    212 @value.setter
-    213 def value(self, value):
-    214     """Set the value and infer type and display options."""
---> 215     self._bind_value(value)
-
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:194, in Cell._bind_value(self, value)
-    191         self.number_format = get_time_format(t)
-    193 elif dt == "s":
---> 194     value = self.check_string(value)
-    195     if len(value) > 1 and value.startswith("="):
-    196         self.data_type = 'f'
-
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/cell/cell.py:162, in Cell.check_string(self, value)
-    160 value = value[:32767]
-    161 if next(ILLEGAL_CHARACTERS_RE.finditer(value), None):
---> 162     raise IllegalCharacterError
-    163 return value
-
-IllegalCharacterError: 
+# Write data to the Excel file, handling illegal characters
+for row in output_df.itertuples(index=False, name=None):
+    cleaned_row = [str(cell).replace('\x00', '') if isinstance(cell, str) else cell for cell in row]
+    ws.append(cleaned_row)
