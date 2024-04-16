@@ -1,8 +1,33 @@
+
 import pandas as pd
 
-# Assuming your dataframe is named df and the date column is named 'date_column'
-# Convert 'date_column' to datetime format
-df['date_column'] = pd.to_datetime(df['date_column'])
+# Read the master Excel file
+master_df = pd.read_excel('master.xlsx')
 
-# Calculate the difference in days between today and the date column
-df['days_since'] = (pd.to_datetime('today') - df['date_column']).dt.days
+# Select the specified columns
+selected_columns = [
+    'counterparty names', 
+    'operation type(buy or sell)', 
+    'trade date', 
+    'trade price', 
+    'value date', 
+    'primary original quantity', 
+    'settlement instrument name', 
+    'isin reference', 
+    'primary instrument long name', 
+    'smoothly trade reference', 
+    'internal status narrative', 
+    'sales person name'
+]
+
+# Create a new DataFrame with only the selected columns
+output_df = master_df[selected_columns]
+
+# Define new columns
+new_columns = ['CBT', 'economic impact', 'LQA', 'days elapsed']
+
+# Insert new columns after "Trade Price"
+output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
+
+# Write the DataFrame to a new Excel file
+output_df.to_excel('output.xlsx', index=False, sheet_name='Sheet1')
