@@ -1,4 +1,3 @@
-
 import pandas as pd
 from datetime import datetime
 import random
@@ -45,9 +44,11 @@ output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%
 today = datetime.today()
 output_df['Days Elapsed'] = (today - pd.to_datetime(output_df['Value Date'])).dt.days - 1
 
-# Save the DataFrame to an HTML file with red headers
-output_html = output_df.to_html(index=False)
-output_html = output_html.replace('<th>', '<th style="color:red;">')
+# Save the DataFrame to a CSV file
+output_df.to_csv('output.csv', index=False)
 
-with open('output.html', 'w') as f:
-    f.write(output_html)
+# Add comment to the CSV file indicating red headers
+with open('output.csv', 'r+') as f:
+    content = f.read()
+    f.seek(0, 0)
+    f.write('# Please set headers in red color\n' + content)
