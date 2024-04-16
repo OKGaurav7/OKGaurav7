@@ -1,69 +1,19 @@
 import pandas as pd
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side
-from datetime import datetime
 
-# Read the master CSV file
-master_df = pd.read_csv('master.csv')
+# Read data from master.xlsx
+master_df = pd.read_excel('master.xlsx')
 
-selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
-output_df = master_df[selected_columns]
+# Read data from prodman.xlsx
+prodman_df = pd.read_excel('prodman.xlsx')
 
-# Define new columns
-new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
+# Merge data based on Counterparty Name (from master.xlsx) and Obligor (from prodman.xlsx)
+merged_df = pd.merge(master_df[['Counterparty Name']], prodman_df[['Obligor', 'TradingAccountCode', 'cash score']], left_on='Counterparty Name', right_on='Obligor', how='left')
 
-# Insert new columns after "Trade Price"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
+# Rename columns as per requirement
+merged_df.rename(columns={'TradingAccountCode': 'ObligorId'}, inplace=True)
 
-# Add dummy data to new columns
-import random
-output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))] # Generating some negative values for testing
-output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+# Fill missing values with "NA"
+merged_df.fillna('NA', inplace=True)
 
-output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
-output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
-
-output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
-
-today = datetime.today()
-output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
-
-output_filename = 'output.xlsx'
-output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
-
-# Open the Excel file
-wb = load_workbook(output_filename)
-ws = wb.active
-
-# Set header cells background color to red
-for cell in ws[1]:
-    cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-
-# Set conditional formatting
-red_fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
-
-# Economic Impact column
-for i, value in enumerate(output_df['Economic Impact'], start=2):
-    if value < 0:
-        ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1).fill = red_fill
-
-# Days Elapsed column
-for i, value in enumerate(output_df['Days Elapsed'], start=2):
-    if value > 7:
-        ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1).fill = red_fill
-
-# Add cell borders to all cells
-border = Border(left=Side(border_style='thin', color='000000'),
-                right=Side(border_style='thin', color='000000'),
-                top=Side(border_style='thin', color='000000'),
-                bottom=Side(border_style='thin', color='000000'))
-
-for row in ws.iter_rows():
-    for cell in row:
-        cell.border = border
-
-# Save the modified Excel file
-wb.save(output_filename)
-
-output_df.to_csv('output.csv', index=False)
+# Write the merged data to a new Excel file
+merged_df.to_excel('merged_data.xlsx', index=False)
