@@ -1,6 +1,7 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Font
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
 from datetime import datetime
 import random
 
@@ -64,12 +65,10 @@ with pd.ExcelWriter(output_filename) as writer:
     sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
     sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
 
-# Open the Excel file
+# Apply styling and formatting for each sheet
 wb = load_workbook(output_filename)
-
-# Loop through each sheet to apply formatting
-for sheet in wb.sheetnames:
-    ws = wb[sheet]
+for sheet_name in wb.sheetnames:
+    ws = wb[sheet_name]
     
     # Set header cells background color to RGB value (192, 0, 0)
     header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
@@ -81,24 +80,6 @@ for sheet in wb.sheetnames:
     # Set conditional formatting color to RGB value (255, 199, 206)
     condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Economic Impact column
-    for i, value in enumerate(ws.iter_rows(min_row=2, min_col=output_df.columns.get_loc('Economic Impact') + 1, max_col=output_df.columns.get_loc('Economic Impact') + 1), start=2):
-        if value[0].value is not None and value[0].value < 0:
-            value[0].fill = condition_fill
-
-    # Days Elapsed column
-    for i, value in enumerate(ws.iter_rows(min_row=2, min_col=output_df.columns.get_loc('Days Elapsed') + 1, max_col=output_df.columns.get_loc('Days Elapsed') + 1), start=2):
-        if value[0].value is not None and value[0].value >= 7:
-            value[0].fill = condition_fill
-
-    # Loop through all cells to set font color
-    for row in ws.iter_rows():
-        for cell in row:
-            if cell.fill == header_fill:
-                cell.font = header_font
-            elif cell.fill == condition_fill:
-                cell.font = Font(color="C00000")  # Set font color to red
-
     # Add cell borders to all cells
     border = Border(left=Side(border_style='thin', color='000000'),
                     right=Side(border_style='thin', color='000000'),
@@ -108,14 +89,13 @@ for sheet in wb.sheetnames:
     for row in ws.iter_rows():
         for cell in row:
             cell.border = border
+            cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
-    # Set column width to fit the content optimally
-    for column in ws.columns:
-        max_length = 0
-        column_values = [cell.value for cell in column]
-        max_length = max(len(str(cell)) for cell in column_values if cell is not None)
-        column_letter = column[0].column_letter
-        ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+    # Loop through all cells to set font color
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.fill == header_fill:
+                cell.font = header_font
 
 # Save the modified Excel file
 wb.save(output_filename)
