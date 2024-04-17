@@ -61,6 +61,9 @@ for counterparty in unique_counterparties:
 # Concatenate all DataFrames in the list
 new_excel_df = pd.concat(dfs, ignore_index=True)
 
+# Replace cell values of 0 with '-'
+new_excel_df = new_excel_df.replace({0: '-'})
+
 # Append the sum of total fails and overall economic impact at the end
 new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
 
@@ -95,13 +98,13 @@ for row in ws.iter_rows():
 # Total Fails column
 for i, value in enumerate(new_excel_df['Total Fails'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Total Fails') + 1)
-    if value > 0:
+    if value != '-':
         cell.fill = condition_fill
 
 # Overall Economic Impact column
 for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
-    if value < 0:
+    if value != '-':
         cell.fill = condition_fill
 
 # Loop through all cells to set font color
