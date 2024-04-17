@@ -1,3 +1,76 @@
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+
+# Read the output.xlsx file into a DataFrame
+output_df = pd.read_excel('output.xlsx')
+
+# Extract unique counterparty names and corresponding obligorIds
+unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
+
+# Create an empty list to store DataFrames for each counterparty
+dfs = []
+
+# Initialize variables for sum of total fails and overall economic impact
+total_fails_sum = 0
+overall_economic_impact_sum = 0
+
+# Iterate over unique counterparty names and obligorIds
+for index, row in unique_counterparties.iterrows():
+    counterparty = row['Counterparty Name']
+    obligor_id = row['ObligorId']
+    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    
+    # Calculate values for each date range
+    vd = len(cp_data[cp_data['Days Elapsed'] == 0])  
+    vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+    vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+    vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+    vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+    vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+    vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+    vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+    
+    # Calculate total fails
+    total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    total_fails_sum += total_fails
+    
+    # Calculate overall economic impact
+    overall_economic_impact = cp_data['Economic Impact'].sum()
+    overall_economic_impact_sum += overall_economic_impact
+    
+    # Create a DataFrame for the current counterparty
+    cp_df = pd.DataFrame({
+        'Counterparty Name': [counterparty],
+        'ObligorId': [obligor_id],  # Add obligorId column
+        'Vd': [vd],
+        'Vd+1': [vd_plus_1],
+        'Vd+2': [vd_plus_2],
+        'Vd+3': [vd_plus_3],
+        'Vd+4': [vd_plus_4],
+        'Vd+5': [vd_plus_5],
+        'Vd+7': [vd_plus_7],
+        'Vd>7': [vd_gt_7],
+        'Total Fails': [total_fails],
+        'Overall Economic Impact': [overall_economic_impact]
+    })
+    
+    # Append the DataFrame to the list
+    dfs.append(cp_df)
+
+# Concatenate all DataFrames in the list
+new_excel_df = pd.concat(dfs, ignore_index=True)
+
+# Replace cell values of 0 with '-'
+new_excel_df = new_excel_df.replace({0: '-'})
+
+# Append the sum of total fails and overall economic impact at the end
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
+
+# Save the new DataFrame to a new Excel file
+output_filename = 'new_excel.xlsx'
+new_excel_df.to_excel(output_filename, index=False)
+
 # Open the Excel file
 wb = load_workbook(output_filename)
 ws = wb.active
@@ -23,10 +96,10 @@ for row in ws.iter_rows():
         cell.border = border
         cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
-# Loop through columns 'Vd' to 'Vd>7' and apply condition_fill if value > 0
-for col_index in range(new_excel_df.columns.get_loc('Vd'), new_excel_df.columns.get_loc('Vd>7') + 1):
-    for i, value in enumerate(new_excel_df.iloc[:, col_index], start=2):
-        cell = ws.cell(row=i, column=col_index + 1)
+# Apply conditional formatting color to cells with values > 0 in specified columns
+for column in ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+7', 'Vd>7']:
+    for i, value in enumerate(new_excel_df[column], start=2):
+        cell = ws.cell(row=i, column=new_excel_df.columns.get_loc(column) + 1)
         if value > 0:
             cell.fill = condition_fill
 
@@ -63,6 +136,7 @@ total_fails_cell.font = header_font
 overall_impact_cell.fill = header_fill
 overall_impact_cell.font = header_font
 
+
 # Set column width to fit the content optimally
 for column in ws.columns:
     max_length = 0
@@ -70,6 +144,7 @@ for column in ws.columns:
     max_length = max(len(str(cell)) for cell in column_values if cell is not None)
     column_letter = column[0].column_letter
     ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+
 
 # Save the modified Excel file
 wb.save(output_filename)
