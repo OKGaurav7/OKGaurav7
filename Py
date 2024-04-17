@@ -1,19 +1,25 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font
+from openpyxl.styles import PatternFill, Border, Side, Font
 from datetime import datetime
-
-# Read data from merged_data.xlsx
-merged_data_df = pd.read_excel('merged_data.xlsx')
 
 # Read the master CSV file
 master_df = pd.read_excel('master.xlsx')
 
-selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
-output_df = master_df[selected_columns]
+# Read the merged data
+merged_df = pd.read_excel('merged_data.xlsx')
+
+# Merge the data based on 'Counterparty Name'
+merged_output_df = pd.merge(master_df, merged_df[['Counterparty Name', 'ObligorId', 'CashScore']], on='Counterparty Name', how='left')
+
+# Define selected columns
+selected_columns = ['Counterparty Name', 'ObligorId', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'CashScore']
+
+# Reorder columns and select required columns
+output_df = merged_output_df[selected_columns]
 
 # Define new columns
-new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed', 'ObligorId', 'CashScore']
+new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
 # Insert new columns after "Trade Price"
 output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
@@ -21,24 +27,22 @@ output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_colum
 # Add dummy data to new columns
 import random
 output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))] # Generating some negative values for testing
+output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))]  # Generating some negative values for testing
 output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
 
+# Convert dates to string format
 output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
 
+# Calculate days elapsed
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
-
 today = datetime.today()
 output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
 
-# Merge with merged_data_df on 'Counterparty Name' and 'Obligor'
-output_df = pd.merge(output_df, merged_data_df[['Counterparty Name', 'ObligorId', 'CashScore']], left_on='Counterparty Name', right_on='Counterparty Name', how='left')
-
-# Set 'ObligorId' before 'Counterparty Name'
-output_df = output_df[['ObligorId', 'Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed', 'CashScore']]
-
+# Define output filename
 output_filename = 'output.xlsx'
+
+# Write data to Excel file
 output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
 
 # Open the Excel file
@@ -96,4 +100,5 @@ for column in ws.columns:
 # Save the modified Excel file
 wb.save(output_filename)
 
+# Save DataFrame to CSV file
 output_df.to_csv('output.csv', index=False)
