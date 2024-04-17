@@ -90,6 +90,13 @@ for row in ws.iter_rows():
         cell.border = border
         cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
+# Apply conditional formatting to cells in columns 'Vd' through 'Vd>7' if cell value is > 0
+for column in ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+7', 'Vd>7']:
+    for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+        cell = ws[f"{column}{row}"]
+        if cell.value is not None and cell.value != '-' and cell.value > 0:
+            cell.fill = condition_fill
+
 # Loop through all cells to set font color
 for row in ws.iter_rows():
     for cell in row:
@@ -107,7 +114,6 @@ total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.column
 total_fails_cell.fill = header_fill
 total_fails_cell.font = header_font
 
-
 # Set column width to fit the content optimally
 for column in ws.columns:
     max_length = 0
@@ -115,7 +121,6 @@ for column in ws.columns:
     max_length = max(len(str(cell)) for cell in column_values if cell is not None)
     column_letter = column[0].column_letter
     ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
-
 
 # Save the modified Excel file
 wb.save(output_filename)
