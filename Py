@@ -23,7 +23,7 @@ output_df = merged_output_df[selected_columns]
 new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
 # Define the desired column order
-custom_column_order = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed', 'ObligorId', 'CashScore']
+custom_column_order = ['ObligorId','Counterparty Name', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
 
 # Insert new columns at specific position
 for i, col in enumerate(new_columns, start=1):
