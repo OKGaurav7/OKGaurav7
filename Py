@@ -76,6 +76,13 @@ for row in ws.iter_rows():
     for cell in row:
         cell.border = border
 
+# Set column width to fit the content optimally
+for column in ws.columns:
+    max_length = 0
+    column = [cell.value for cell in column]
+    max_length = max(len(str(cell)) for cell in column)
+    ws.column_dimensions[chr(column[0].column + 64)].width = max_length + 2  # Adding some extra space
+
 # Save the modified Excel file
 wb.save(output_filename)
 
