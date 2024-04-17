@@ -1,57 +1,82 @@
-KeyError                                  Traceback (most recent call last)
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/indexes/base.py:3802, in Index.get_loc(self, key, method, tolerance)
-   3801 try:
--> 3802     return self._engine.get_loc(casted_key)
-   3803 except KeyError as err:
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/_libs/index.pyx:138, in pandas._libs.index.IndexEngine.get_loc()
+# Read the output.csv file into a DataFrame
+output_df = pd.read_csv('output.csv')
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/_libs/index.pyx:165, in pandas._libs.index.IndexEngine.get_loc()
+# Read the output.xlsx file to get the 'ObligorId' column
+output_xlsx_df = pd.read_excel('output.xlsx')
 
-File pandas/_libs/hashtable_class_helper.pxi:5745, in pandas._libs.hashtable.PyObjectHashTable.get_item()
+# Merge 'ObligorId' column with output_df based on 'Counterparty Name'
+output_df = output_df.merge(output_xlsx_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
 
-File pandas/_libs/hashtable_class_helper.pxi:5753, in pandas._libs.hashtable.PyObjectHashTable.get_item()
+# Convert 'Value Date' to datetime format
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 
-KeyError: 'ObligorId'
+# Extract unique counterparty names
+unique_counterparties = output_df['Counterparty Name'].unique()
 
-The above exception was the direct cause of the following exception:
+# Create an empty list to store DataFrames for each counterparty
+dfs = []
 
-KeyError                                  Traceback (most recent call last)
-Cell In[129], line 52
-     47 overall_economic_impact_sum += overall_economic_impact
-     49 # Create a DataFrame for the current counterparty
-     50 cp_df = pd.DataFrame({
-     51     'Counterparty Name': [counterparty],
----> 52     'ObligorId': cp_data['ObligorId'].iloc[0],  # Extract ObligorId for the counterparty
-     53     'Vd': [vd],
-     54     'Vd+1': [vd_plus_1],
-     55     'Vd+2': [vd_plus_2],
-     56     'Vd+3': [vd_plus_3],
-     57     'Vd+4': [vd_plus_4],
-     58     'Vd+5': [vd_plus_5],
-     59     'Vd+7': [vd_plus_7],
-     60     'Vd>7': [vd_gt_7],
-     61     'Total Fails': [total_fails],
-     62     'Overall Economic Impact': [overall_economic_impact]
-     63 })
-     65 # Append the DataFrame to the list
-     66 dfs.append(cp_df)
+# Initialize variables for sum of total fails and overall economic impact
+total_fails_sum = 0
+overall_economic_impact_sum = 0
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/frame.py:3807, in DataFrame.__getitem__(self, key)
-   3805 if self.columns.nlevels > 1:
-   3806     return self._getitem_multilevel(key)
--> 3807 indexer = self.columns.get_loc(key)
-   3808 if is_integer(indexer):
-   3809     indexer = [indexer]
+# Iterate over unique counterparty names
+for counterparty in unique_counterparties:
+    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    
+    # Calculate values for each date range
+    vd = len(cp_data[cp_data['Days Elapsed'] == 0])  
+    vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+    vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+    vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+    vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+    vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+    vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+    vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+    
+    # Calculate total fails
+    total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    total_fails_sum += total_fails
+    
+    # Calculate overall economic impact
+    overall_economic_impact = cp_data['Economic Impact'].sum()
+    overall_economic_impact_sum += overall_economic_impact
+    
+    # Create a DataFrame for the current counterparty
+    cp_df = pd.DataFrame({
+        'Counterparty Name': [counterparty],
+        'ObligorId': cp_data['ObligorId'].iloc[0],  # Take the first value since it should be the same for all rows
+        'Vd': [vd],
+        'Vd+1': [vd_plus_1],
+        'Vd+2': [vd_plus_2],
+        'Vd+3': [vd_plus_3],
+        'Vd+4': [vd_plus_4],
+        'Vd+5': [vd_plus_5],
+        'Vd+7': [vd_plus_7],
+        'Vd>7': [vd_gt_7],
+        'Total Fails': [total_fails],
+        'Overall Economic Impact': [overall_economic_impact]
+    })
+    
+    # Append the DataFrame to the list
+    dfs.append(cp_df)
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/indexes/base.py:3804, in Index.get_loc(self, key, method, tolerance)
-   3802     return self._engine.get_loc(casted_key)
-   3803 except KeyError as err:
--> 3804     raise KeyError(key) from err
-   3805 except TypeError:
-   3806     # If we have a listlike key, _check_indexing_error will raise
-   3807     #  InvalidIndexError. Otherwise we fall through and re-raise
-   3808     #  the TypeError.
-   3809     self._check_indexing_error(key)
+# Concatenate all DataFrames in the list
+new_excel_df = pd.concat(dfs, ignore_index=True)
 
-KeyError: 'ObligorId'
+# Replace cell values of 0 with '-'
+new_excel_df = new_excel_df.replace({0: '-'})
+
+# Append the sum of total fails and overall economic impact at the end
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
+
+# Save the new DataFrame to a new Excel file
+output_filename = 'new_excel.xlsx'
+new_excel_df.to_excel(output_filename, index=False)
+
+# Open the Excel file and apply styling (code for styling remains the same)
+# ...
