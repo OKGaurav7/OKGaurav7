@@ -1,9 +1,169 @@
-ValueError                                Traceback (most recent call last)
-Cell In[159], line 163
-    161 max_length = 0
-    162 column_values = [cell.value for cell in column]
---> 163 max_length = max(len(str(cell)) for cell in column_values if cell is not None)
-    164 column_letter = column[0].column_letter
-    165 ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
 
-ValueError: max() arg is an empty sequenc
+# Read the output.xlsx file into a DataFrame
+output_df = pd.read_excel('output.xlsx')
+
+# Extract unique counterparty names and corresponding obligorIds
+unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
+
+# Create an empty list to store DataFrames for each counterparty
+dfs = []
+
+# Initialize variable for sum of total fails
+total_fails_sum = 0
+
+# Iterate over unique counterparty names and obligorIds
+for index, row in unique_counterparties.iterrows():
+    counterparty = row['Counterparty Name']
+    obligor_id = row['ObligorId']
+    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    
+    # Calculate values for each date range
+    vd = len(cp_data[cp_data['Days Elapsed'] == 0])  
+    vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+    vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+    vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+    vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+    vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+    vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+    vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+    
+    # Calculate total fails
+    total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    total_fails_sum += total_fails
+    
+    # Create a DataFrame for the current counterparty
+    cp_df = pd.DataFrame({
+        'Counterparty Name': [counterparty],
+        'ObligorId': [obligor_id],  # Add obligorId column
+        'Vd': [vd],
+        'Vd+1': [vd_plus_1],
+        'Vd+2': [vd_plus_2],
+        'Vd+3': [vd_plus_3],
+        'Vd+4': [vd_plus_4],
+        'Vd+5': [vd_plus_5],
+        'Vd+7': [vd_plus_7],
+        'Vd>7': [vd_gt_7],
+        'Total Fails': [total_fails]
+    })
+    
+    # Append the DataFrame to the list
+    dfs.append(cp_df)
+
+# Concatenate all DataFrames in the list
+new_excel_df = pd.concat(dfs, ignore_index=True)
+
+# Replace cell values of 0 with '-'
+new_excel_df = new_excel_df.replace({0: '-'})
+
+# Append the sum of total fails at the end
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
+
+# Save the new DataFrame to a new Excel file
+output_filename = 'new_excel.xlsx'
+new_excel_df.to_excel(output_filename, index=False)
+
+# Open the Excel file
+wb = load_workbook(output_filename)
+ws = wb.active
+
+# Set header cells background color to RGB value (192, 0, 0)
+header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+for cell in ws[1]:
+    cell.fill = header_fill
+    cell.font = header_font
+
+# Set conditional formatting color to RGB value (255, 199, 206)
+condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+# Add cell borders to all cells
+border = Border(left=Side(border_style='thin', color='000000'),
+                right=Side(border_style='thin', color='000000'),
+                top=Side(border_style='thin', color='000000'),
+                bottom=Side(border_style='thin', color='000000'))
+
+for row in ws.iter_rows():
+    for cell in row:
+        cell.border = border
+        cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
+
+# Apply conditional formatting to cells in 'Vd' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"V{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+1' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"W{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+2' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"X{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+3' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"Y{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+4' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"Z{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+5' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"AA{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd+7' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"AB{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Apply conditional formatting to cells in 'Vd>7' column if cell value is > 0
+for row in range(2, len(new_excel_df) + 2):  # Start from row 2 (excluding header)
+    cell = ws[f"AC{row}"]
+    if cell.value is not None and cell.value != '-' and cell.value > 0:
+        cell.fill = condition_fill
+
+# Loop through all cells to set font color
+for row in ws.iter_rows():
+    for cell in row:
+        if cell.fill == header_fill:
+            cell.font = header_font
+
+# Apply header style to the cell containing 'Total' in the 'Vd>7' column
+vd_gt_7_total_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Vd>7') + 1)
+vd_gt_7_total_cell.fill = header_fill
+vd_gt_7_total_cell.font = header_font
+
+# Apply header style to cells containing sum of total fails
+total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Total Fails') + 1)
+
+total_fails_cell.fill = header_fill
+total_fails_cell.font = header_font
+
+# Set column width to fit the content optimally
+for column in ws.columns:
+    max_length = 0
+    column_values = [cell.value for cell in column if cell.value is not None]  # Exclude None values
+    if column_values:
+        max_length = max(len(str(cell)) for cell in column_values)
+        column_letter = column[0].column_letter
+        ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+
+# Save the modified Excel file
+wb.save(output_filename)
