@@ -23,7 +23,7 @@ for counterparty in unique_counterparties:
     cp_data = output_df[output_df['Counterparty Name'] == counterparty]
     
     # Calculate values for each date range
-    vd = len(cp_data)
+    vd = len(cp_data[cp_data['Days Elapsed'] != 0])  # Exclude days elapsed = 0
     vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
     vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
     vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
