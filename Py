@@ -1,6 +1,6 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side
+from openpyxl.styles import PatternFill, Border, Side, Font
 from datetime import datetime
 
 # Read the master CSV file
@@ -40,19 +40,29 @@ ws = wb.active
 header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
 for cell in ws[1]:
     cell.fill = header_fill
+    cell.font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
 
 # Set conditional formatting color to RGB value (255, 199, 206)
 condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+condition_font = Font(color="C00000")  # Set font color to red for conditional formatting cells
 
 # Economic Impact column
 for i, value in enumerate(output_df['Economic Impact'], start=2):
+    cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
     if value < 0:
-        ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1).fill = condition_fill
+        cell.fill = condition_fill
+        cell.font = condition_font
+    else:
+        cell.fill = None  # Remove fill if value is not negative
 
 # Days Elapsed column
 for i, value in enumerate(output_df['Days Elapsed'], start=2):
+    cell = ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1)
     if value >= 7:
-        ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1).fill = condition_fill
+        cell.fill = condition_fill
+        cell.font = condition_font
+    else:
+        cell.fill = None  # Remove fill if value is less than 7
 
 # Add cell borders to all cells
 border = Border(left=Side(border_style='thin', color='000000'),
