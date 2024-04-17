@@ -1,22 +1,93 @@
+#output , headers, conditions, spacing
+
+#goo
 import pandas as pd
 from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Border, Side, Font
+from datetime import datetime
 
-# Read data from the Excel file
-df = pd.read_excel('output.xlsx')
+# Read the master CSV file
+master_df = pd.read_excel('master.xlsx')
 
-# Filter data where operation type is Buy
-buy_df = df[df['Operation Type'].str.contains('BUY')]
+selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
+output_df = master_df[selected_columns]
 
-# Filter data where operation type is Sell
-sell_df = df[df['Operation Type'].str.contains('SELL')]
+# Define new columns
+new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
-# Write the filtered DataFrames to separate Excel files
-with pd.ExcelWriter('buy_data.xlsx', engine='openpyxl') as writer:
-    writer.book = load_workbook('output.xlsx')
-    writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
-    buy_df.to_excel(writer, sheet_name='Buy', index=False)
+# Insert new columns after "Trade Price"
+output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
 
-with pd.ExcelWriter('sell_data.xlsx', engine='openpyxl') as writer:
-    writer.book = load_workbook('output.xlsx')
-    writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
-    sell_df.to_excel(writer, sheet_name='Sell', index=False)
+# Add dummy data to new columns
+import random
+output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
+output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))] # Generating some negative values for testing
+output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+
+output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
+
+output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+
+today = datetime.today()
+output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+
+output_filename = 'output.xlsx'
+output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
+
+# Open the Excel file
+wb = load_workbook(output_filename)
+ws = wb.active
+
+# Set header cells background color to RGB value (192, 0, 0)
+header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+for cell in ws[1]:
+    cell.fill = header_fill
+    cell.font = header_font
+
+# Set conditional formatting color to RGB value (255, 199, 206)
+condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+# Economic Impact column
+for i, value in enumerate(output_df['Economic Impact'], start=2):
+    cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
+    if value < 0:
+        cell.fill = condition_fill
+
+# Days Elapsed column
+for i, value in enumerate(output_df['Days Elapsed'], start=2):
+    cell = ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1)
+    if value >= 7:
+        cell.fill = condition_fill
+
+# Loop through all cells to set font color
+for row in ws.iter_rows():
+    for cell in row:
+        if cell.fill == header_fill:
+            cell.font = header_font
+        elif cell.fill == condition_fill:
+            cell.font = Font(color="C00000")  # Set font color to red
+
+# Add cell borders to all cells
+border = Border(left=Side(border_style='thin', color='000000'),
+                right=Side(border_style='thin', color='000000'),
+                top=Side(border_style='thin', color='000000'),
+                bottom=Side(border_style='thin', color='000000'))
+
+for row in ws.iter_rows():
+    for cell in row:
+        cell.border = border
+
+# Set column width to fit the content optimally
+for column in ws.columns:
+    max_length = 0
+    column_values = [cell.value for cell in column]
+    max_length = max(len(str(cell)) for cell in column_values if cell is not None)
+    column_letter = column[0].column_letter
+    ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+
+# Save the modified Excel file
+wb.save(output_filename)
+
+output_df.to_csv('output.csv', index=False)
