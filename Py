@@ -1,4 +1,3 @@
-#output with header color and condition color, but not spacing
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side
@@ -37,22 +36,23 @@ output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
 wb = load_workbook(output_filename)
 ws = wb.active
 
-# Set header cells background color to red
+# Set header cells background color to RGB value (192, 0, 0)
+header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
 for cell in ws[1]:
-    cell.fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    cell.fill = header_fill
 
-# Set conditional formatting
-red_fill = PatternFill(start_color="FF9999", end_color="FF9999", fill_type="solid")
+# Set conditional formatting color to RGB value (255, 199, 206)
+condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
 # Economic Impact column
 for i, value in enumerate(output_df['Economic Impact'], start=2):
     if value < 0:
-        ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1).fill = red_fill
+        ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1).fill = condition_fill
 
 # Days Elapsed column
 for i, value in enumerate(output_df['Days Elapsed'], start=2):
-    if value > 7:
-        ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1).fill = red_fill
+    if value >= 7:
+        ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1).fill = condition_fill
 
 # Add cell borders to all cells
 border = Border(left=Side(border_style='thin', color='000000'),
