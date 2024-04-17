@@ -67,5 +67,16 @@ new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', 
 # Replace 0 with '-' in the DataFrame
 new_excel_df = new_excel_df.replace(0, '-')
 
+# Apply border to all cells
+border = {'border': '1px solid black'}
+new_excel_df = new_excel_df.style.set_properties(**border)
+
+# Apply fill color to negative values in 'Economic Impact' column
+def apply_color(value):
+    color = 'white' if value >= 0 else 'rgb(255,199,206)'
+    return f'background-color: {color}'
+
+new_excel_df = new_excel_df.applymap(apply_color, subset=['Overall Economic Impact'])
+
 # Save the new DataFrame to a new Excel file
-new_excel_df.to_excel('new_excel.xlsx', index=False)
+new_excel_df.to_excel('new_excel.xlsx', index=False, engine='openpyxl')
