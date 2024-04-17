@@ -1,8 +1,7 @@
 import pandas as pd
-from openpyxl import load_workbook
+from openpyxl import load_workbook, Workbook
 from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
-from openpyxl.utils import get_column_letter
-from openpyxl.workbook import Workbook
+from openpyxl.utils import dataframe_to_rows
 
 # Read the output.xlsx file into a DataFrame
 output_df = pd.read_excel('output.xlsx')
