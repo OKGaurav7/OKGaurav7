@@ -1,3 +1,7 @@
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+
 # Read the output.xlsx file into a DataFrame
 output_df = pd.read_excel('output.xlsx')
 
@@ -26,11 +30,6 @@ for index, row in unique_counterparties.iterrows():
     vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
     vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
     vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
-    
-    # Apply condition_fill to cells with values > 0 in specified columns
-    condition_columns = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+7', 'Vd>7']
-    for column in condition_columns:
-        cp_data[column] = cp_data[column].apply(lambda x: condition_fill if x > 0 else None)
     
     # Calculate total fails
     total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
@@ -97,6 +96,12 @@ for row in ws.iter_rows():
         cell.border = border
         cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
+# Apply fill color to cells in the 'Vd' column where value is greater than 0
+for i, value in enumerate(new_excel_df['Vd'], start=2):
+    cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Vd') + 1)
+    if value > 0:
+        cell.fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+
 # Overall Economic Impact column
 for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
@@ -107,7 +112,7 @@ for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
         #do not fill
         pass
 
-# Loop through all cells to set font color and apply conditional fill
+# Loop through all cells to set font color
 for row in ws.iter_rows():
     for cell in row:
         if cell.fill == header_fill:
