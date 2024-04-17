@@ -1,6 +1,6 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font, Border, Side
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
 
 # Read the output.csv file into a DataFrame
 output_df = pd.read_csv('output.csv')
@@ -94,6 +94,7 @@ border = Border(left=Side(border_style='thin', color='000000'),
 for row in ws.iter_rows():
     for cell in row:
         cell.border = border
+        cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
 # Total Fails column
 #for i, value in enumerate(new_excel_df['Total Fails'], start=2):
