@@ -1,6 +1,6 @@
 import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font
+from openpyxl.styles import PatternFill, Font, Border, Side
 
 # Read the output.csv file into a DataFrame
 output_df = pd.read_csv('output.csv')
@@ -81,6 +81,16 @@ for cell in ws[1]:
 
 # Set conditional formatting color to RGB value (255, 199, 206)
 condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+# Add cell borders to all cells
+border = Border(left=Side(border_style='thin', color='000000'),
+                right=Side(border_style='thin', color='000000'),
+                top=Side(border_style='thin', color='000000'),
+                bottom=Side(border_style='thin', color='000000'))
+
+for row in ws.iter_rows():
+    for cell in row:
+        cell.border = border
 
 # Total Fails column
 for i, value in enumerate(new_excel_df['Total Fails'], start=2):
