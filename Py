@@ -22,7 +22,7 @@ output_df = merged_output_df[selected_columns]
 new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
 # Insert new columns after "CashScore"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:14] + new_columns + output_df.columns.tolist()[14:])
+output_df = output_df.reindex(columns=output_df.columns.tolist()[:1] + ['Counterparty Name'] + output_df.columns.tolist()[1:14] + new_columns + output_df.columns.tolist()[14:])
 
 # Add dummy data to new columns
 import random
