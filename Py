@@ -8,8 +8,14 @@ output_df = pd.read_csv('output.csv')
 # Convert 'Value Date' to datetime format
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 
+# Read the merged_data.xlsx file
+merged_data_df = pd.read_excel('merged_data.xlsx')
+
+# Merge output_df with 'ObligorId' from merged_data_df based on 'Counterparty Name'
+new_excel_df = pd.merge(output_df, merged_data_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
+
 # Extract unique counterparty names
-unique_counterparties = output_df['Counterparty Name'].unique()
+unique_counterparties = new_excel_df['Counterparty Name'].unique()
 
 # Create an empty list to store DataFrames for each counterparty
 dfs = []
@@ -20,7 +26,7 @@ overall_economic_impact_sum = 0
 
 # Iterate over unique counterparty names
 for counterparty in unique_counterparties:
-    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    cp_data = new_excel_df[new_excel_df['Counterparty Name'] == counterparty]
     
     # Calculate values for each date range
     vd = len(cp_data[cp_data['Days Elapsed'] == 0])  
@@ -66,12 +72,6 @@ new_excel_df = new_excel_df.replace({0: '-'})
 
 # Append the sum of total fails and overall economic impact at the end
 new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
-
-# Read the merged_data.xlsx file
-merged_data_df = pd.read_excel('merged_data.xlsx')
-
-# Merge new_excel.xlsx with 'ObligorId' from merged_data.xlsx based on 'Counterparty Name'
-new_excel_df = pd.merge(new_excel_df, merged_data_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
 
 # Save the new DataFrame to a new Excel file
 output_filename = 'new_excel.xlsx'
