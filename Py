@@ -1,13 +1,22 @@
-#Buy and sell different file
+import pandas as pd
+from openpyxl import load_workbook
 
+# Read data from the Excel file
+df = pd.read_excel('output.xlsx')
 
 # Filter data where operation type is Buy
-df = pd.read_csv('output.csv')
 buy_df = df[df['Operation Type'].str.contains('BUY')]
 
 # Filter data where operation type is Sell
 sell_df = df[df['Operation Type'].str.contains('SELL')]
 
 # Write the filtered DataFrames to separate Excel files
-buy_df.to_csv('buy_data.csv', index=False)
-sell_df.to_csv('sell_data.csv', index=False)
+with pd.ExcelWriter('buy_data.xlsx', engine='openpyxl') as writer:
+    writer.book = load_workbook('output.xlsx')
+    writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
+    buy_df.to_excel(writer, sheet_name='Buy', index=False)
+
+with pd.ExcelWriter('sell_data.xlsx', engine='openpyxl') as writer:
+    writer.book = load_workbook('output.xlsx')
+    writer.sheets = dict((ws.title, ws) for ws in writer.book.worksheets)
+    sell_df.to_excel(writer, sheet_name='Sell', index=False)
