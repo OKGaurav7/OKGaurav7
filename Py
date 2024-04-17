@@ -100,12 +100,16 @@ for i, value in enumerate(new_excel_df['Total Fails'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Total Fails') + 1)
     if value != '-':
         cell.fill = condition_fill
+    if value == 'Total':
+        cell.fill = header_fill
 
 # Overall Economic Impact column
 for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
     if value != '-':
         cell.fill = condition_fill
+    if value == 'Total':
+        cell.fill = header_fill
 
 # Loop through all cells to set font color
 for row in ws.iter_rows():
