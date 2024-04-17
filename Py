@@ -45,25 +45,26 @@ for cell in ws[1]:
 
 # Set conditional formatting color to RGB value (255, 199, 206)
 condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-condition_font = Font(color="C00000")  # Set font color to red for conditional formatting cells
 
 # Economic Impact column
 for i, value in enumerate(output_df['Economic Impact'], start=2):
     cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
     if value < 0:
         cell.fill = condition_fill
-        cell.font = condition_font
-    else:
-        cell.fill = None  # Remove fill if value is not negative
 
 # Days Elapsed column
 for i, value in enumerate(output_df['Days Elapsed'], start=2):
     cell = ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1)
     if value >= 7:
         cell.fill = condition_fill
-        cell.font = condition_font
-    else:
-        cell.fill = None  # Remove fill if value is less than 7
+
+# Loop through all cells to set font color
+for row in ws.iter_rows():
+    for cell in row:
+        if cell.fill == header_fill:
+            cell.font = header_font
+        elif cell.fill == condition_fill:
+            cell.font = Font(color="C00000")  # Set font color to red
 
 # Add cell borders to all cells
 border = Border(left=Side(border_style='thin', color='000000'),
