@@ -1,93 +1,68 @@
-#output , headers, conditions, spacing
+#below the updated summary of the failed trades,CBBT is used as a pricing source
 
-#goo
 import pandas as pd
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Font
-from datetime import datetime
 
-# Read the master CSV file
-master_df = pd.read_excel('master.xlsx')
+# Read the output.csv file into a DataFrame
+output_df = pd.read_csv('output.csv')
 
-selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
-output_df = master_df[selected_columns]
-
-# Define new columns
-new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
-
-# Insert new columns after "Trade Price"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
-
-# Add dummy data to new columns
-import random
-output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
-output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))] # Generating some negative values for testing
-output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
-
-output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
-output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
-
+# Convert 'Value Date' to datetime format
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 
-today = datetime.today()
-output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+# Extract unique counterparty names
+unique_counterparties = output_df['Counterparty Name'].unique()
 
-output_filename = 'output.xlsx'
-output_df.to_excel(output_filename, index=False, sheet_name='Sheet1')
+# Create an empty list to store DataFrames for each counterparty
+dfs = []
 
-# Open the Excel file
-wb = load_workbook(output_filename)
-ws = wb.active
+# Initialize variables for sum of total fails and overall economic impact
+total_fails_sum = 0
+overall_economic_impact_sum = 0
 
-# Set header cells background color to RGB value (192, 0, 0)
-header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
-header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
-for cell in ws[1]:
-    cell.fill = header_fill
-    cell.font = header_font
+# Iterate over unique counterparty names
+for counterparty in unique_counterparties:
+    cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+    
+    # Calculate values for each date range
+    vd = len(cp_data)
+    vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+    vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+    vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+    vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+    vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+    vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+    vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+    
+    # Calculate total fails
+    total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+    total_fails_sum += total_fails
+    
+    # Calculate overall economic impact
+    overall_economic_impact = cp_data['Economic Impact'].sum()
+    overall_economic_impact_sum += overall_economic_impact
+    
+    # Create a DataFrame for the current counterparty
+    cp_df = pd.DataFrame({
+        'Counterparty Name': [counterparty],
+        'Vd': [vd],
+        'Vd+1': [vd_plus_1],
+        'Vd+2': [vd_plus_2],
+        'Vd+3': [vd_plus_3],
+        'Vd+4': [vd_plus_4],
+        'Vd+5': [vd_plus_5],
+        'Vd+7': [vd_plus_7],
+        'Vd>7': [vd_gt_7],
+        'Total Fails': [total_fails],
+        'Overall Economic Impact': [overall_economic_impact]
+    })
+    
+    # Append the DataFrame to the list
+    dfs.append(cp_df)
 
-# Set conditional formatting color to RGB value (255, 199, 206)
-condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+# Concatenate all DataFrames in the list
+new_excel_df = pd.concat(dfs, ignore_index=True)
 
-# Economic Impact column
-for i, value in enumerate(output_df['Economic Impact'], start=2):
-    cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
-    if value < 0:
-        cell.fill = condition_fill
+# Append the sum of total fails and overall economic impact at the end
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
 
-# Days Elapsed column
-for i, value in enumerate(output_df['Days Elapsed'], start=2):
-    cell = ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1)
-    if value >= 7:
-        cell.fill = condition_fill
-
-# Loop through all cells to set font color
-for row in ws.iter_rows():
-    for cell in row:
-        if cell.fill == header_fill:
-            cell.font = header_font
-        elif cell.fill == condition_fill:
-            cell.font = Font(color="C00000")  # Set font color to red
-
-# Add cell borders to all cells
-border = Border(left=Side(border_style='thin', color='000000'),
-                right=Side(border_style='thin', color='000000'),
-                top=Side(border_style='thin', color='000000'),
-                bottom=Side(border_style='thin', color='000000'))
-
-for row in ws.iter_rows():
-    for cell in row:
-        cell.border = border
-
-# Set column width to fit the content optimally
-for column in ws.columns:
-    max_length = 0
-    column_values = [cell.value for cell in column]
-    max_length = max(len(str(cell)) for cell in column_values if cell is not None)
-    column_letter = column[0].column_letter
-    ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
-
-# Save the modified Excel file
-wb.save(output_filename)
-
-output_df.to_csv('output.csv', index=False)
+# Save the new DataFrame to a new Excel file
+new_excel_df.to_excel('new_excel.xlsx', index=False)
