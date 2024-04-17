@@ -1,4 +1,3 @@
-#almost good for the first excel
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
@@ -8,6 +7,12 @@ output_df = pd.read_csv('output.csv')
 
 # Convert 'Value Date' to datetime format
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+
+# Read the output.xlsx file
+output_xlsx_df = pd.read_excel('output.xlsx')
+
+# Merge output_df with output_xlsx_df on the 'Counterparty Name' column
+output_df = pd.merge(output_df, output_xlsx_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
 
 # Extract unique counterparty names
 unique_counterparties = output_df['Counterparty Name'].unique()
@@ -44,6 +49,7 @@ for counterparty in unique_counterparties:
     # Create a DataFrame for the current counterparty
     cp_df = pd.DataFrame({
         'Counterparty Name': [counterparty],
+        'ObligorId': cp_data['ObligorId'].iloc[0],  # Extract ObligorId for the counterparty
         'Vd': [vd],
         'Vd+1': [vd_plus_1],
         'Vd+2': [vd_plus_2],
@@ -66,7 +72,7 @@ new_excel_df = pd.concat(dfs, ignore_index=True)
 new_excel_df = new_excel_df.replace({0: '-'})
 
 # Append the sum of total fails and overall economic impact at the end
-new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
 
 # Save the new DataFrame to a new Excel file
 output_filename = 'new_excel.xlsx'
