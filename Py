@@ -23,7 +23,7 @@ for counterparty in unique_counterparties:
     cp_data = output_df[output_df['Counterparty Name'] == counterparty]
     
     # Calculate values for each date range
-    vd = len(cp_data[cp_data['Days Elapsed'] != 0])  # Exclude days elapsed = 0
+    vd = len(cp_data[cp_data['Days Elapsed'] == 0])  
     vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
     vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
     vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
@@ -96,16 +96,20 @@ for row in ws.iter_rows():
         cell.border = border
 
 # Total Fails column
-for i, value in enumerate(new_excel_df['Total Fails'], start=2):
-    cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Total Fails') + 1)
-    if value != '-':
-        cell.fill = condition_fill
+#for i, value in enumerate(new_excel_df['Total Fails'], start=2):
+#    cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Total Fails') + 1)
+#    if value != '-':
+#        cell.fill = condition_fill
 
 # Overall Economic Impact column
 for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
-    if value != '-':
+    if value < 0:
         cell.fill = condition_fill
+        cell.value='('+str(abs(value))+')'
+    else:
+        #do not fill
+        pass
 
 # Loop through all cells to set font color
 for row in ws.iter_rows():
@@ -119,6 +123,26 @@ for row in ws.iter_rows():
 vd_gt_7_total_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Vd>7') + 1)
 vd_gt_7_total_cell.fill = header_fill
 vd_gt_7_total_cell.font = header_font
+
+# Apply header style to cells containing sum of total fails and overall economic impact
+total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Total Fails') + 1)
+overall_impact_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
+
+total_fails_cell.fill = header_fill
+total_fails_cell.font = header_font
+
+overall_impact_cell.fill = header_fill
+overall_impact_cell.font = header_font
+
+
+# Set column width to fit the content optimally
+for column in ws.columns:
+    max_length = 0
+    column_values = [cell.value for cell in column]
+    max_length = max(len(str(cell)) for cell in column_values if cell is not None)
+    column_letter = column[0].column_letter
+    ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+
 
 # Save the modified Excel file
 wb.save(output_filename)
