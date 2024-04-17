@@ -112,7 +112,7 @@ def generate_output():
 
 def generate_new_excel():
     # Read the output.xlsx file into a DataFrame
-    output_df = pd.read_excel('output.xlsx')
+    output_df = pd.read_excel('output.xlsx', sheet_name='All Data')
 
     # Extract unique counterparty names and corresponding obligorIds
     unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
@@ -171,9 +171,10 @@ def generate_new_excel():
     # Append the sum of total fails at the end
     new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
 
-    # Save the new DataFrame to a new Excel file
+    # Save the new DataFrame to the existing Excel file without overwriting existing sheets
     output_filename = 'output.xlsx'
-    new_excel_df.to_excel(output_filename, index=False, sheet_name='New Data')
+    with pd.ExcelWriter(output_filename, mode='a', engine='openpyxl') as writer:
+        new_excel_df.to_excel(writer, index=False, sheet_name='New Data')
 
     # Open the Excel file
     wb = load_workbook(output_filename)
