@@ -2,6 +2,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
+from openpyxl.workbook import Workbook
 
 # Read the output.xlsx file into a DataFrame
 output_df = pd.read_excel('output.xlsx')
@@ -65,59 +66,69 @@ new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Tota
 
 # Save the new DataFrame to a new Excel sheet in the same Excel file
 output_filename = 'output.xlsx'
-with pd.ExcelWriter(output_filename, mode='a', engine='openpyxl') as writer:
-    new_excel_df.to_excel(writer, index=False, sheet_name='New Data')
 
-    # Open the existing Excel file
+# Open the existing Excel file
+try:
     wb = load_workbook(output_filename)
-    ws = wb['New Data']  # Access the newly created sheet
+except FileNotFoundError:
+    wb = Workbook()
 
-    # Set header cells background color to RGB value (192, 0, 0)
-    header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
-    for cell in ws[1]:
-        cell.fill = header_fill
-        cell.font = header_font
+# Create a new sheet or get the existing sheet named 'New Data'
+if 'New Data' not in wb.sheetnames:
+    ws = wb.create_sheet(title='New Data')
+else:
+    ws = wb['New Data']
 
-    # Set conditional formatting color to RGB value (255, 199, 206)
-    condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+# Write the DataFrame to the Excel sheet
+for r in dataframe_to_rows(new_excel_df, index=False, header=True):
+    ws.append(r)
 
-    # Add cell borders to all cells
-    border = Border(left=Side(border_style='thin', color='000000'),
-                    right=Side(border_style='thin', color='000000'),
-                    top=Side(border_style='thin', color='000000'),
-                    bottom=Side(border_style='thin', color='000000'))
+# Set header cells background color to RGB value (192, 0, 0)
+header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+for cell in ws[1]:
+    cell.fill = header_fill
+    cell.font = header_font
 
-    for row in ws.iter_rows():
-        for cell in row:
-            cell.border = border
-            cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
+# Set conditional formatting color to RGB value (255, 199, 206)
+condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Loop through all cells to set font color
-    for row in ws.iter_rows():
-        for cell in row:
-            if cell.fill == header_fill:
-                cell.font = header_font
+# Add cell borders to all cells
+border = Border(left=Side(border_style='thin', color='000000'),
+                right=Side(border_style='thin', color='000000'),
+                top=Side(border_style='thin', color='000000'),
+                bottom=Side(border_style='thin', color='000000'))
 
-    # Apply header style to the cell containing 'Total' in the 'Vd>7' column
-    vd_gt_7_total_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Vd>7') + 1)
-    vd_gt_7_total_cell.fill = header_fill
-    vd_gt_7_total_cell.font = header_font
+for row in ws.iter_rows():
+    for cell in row:
+        cell.border = border
+        cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
-    # Apply header style to cells containing sum of total fails
-    total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Total Fails') + 1)
+# Loop through all cells to set font color
+for row in ws.iter_rows():
+    for cell in row:
+        if cell.fill == header_fill:
+            cell.font = header_font
 
-    total_fails_cell.fill = header_fill
-    total_fails_cell.font = header_font
+# Apply header style to the cell containing 'Total' in the 'Vd>7' column
+vd_gt_7_total_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Vd>7') + 1)
+vd_gt_7_total_cell.fill = header_fill
+vd_gt_7_total_cell.font = header_font
 
-    # Set column width to fit the content optimally
-    for column in ws.columns:
-        max_length = 0
-        column_values = [cell.value for cell in column if cell.value is not None]  # Exclude None values
-        if column_values:
-            max_length = max(len(str(cell)) for cell in column_values)
-            column_letter = column[0].column_letter
-            ws.column_dimensions[column_letter].width = max_length + 5  # Adding some extra space
+# Apply header style to cells containing sum of total fails
+total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Total Fails') + 1)
 
-    # Save the modified Excel file
-    wb.save(output_filename)
+total_fails_cell.fill = header_fill
+total_fails_cell.font = header_font
+
+# Set column width to fit the content optimally
+for column in ws.columns:
+    max_length = 0
+    column_values = [cell.value for cell in column if cell.value is not None]  # Exclude None values
+    if column_values:
+        max_length = max(len(str(cell)) for cell in column_values)
+        column_letter = column[0].column_letter
+        ws.column_dimensions[column_letter].width = max_length + 5  # Adding some extra space
+
+# Save the modified Excel file
+wb.save(output_filename)
