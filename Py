@@ -116,4 +116,14 @@ for row in ws.iter_rows():
             cell.font = Font(color="C00000")  # Set font color to red
 
 # Apply header style to cells containing sum of total fails and overall economic impact
-total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new
+total_fails_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Total Fails') + 1)
+overall_impact_cell = ws.cell(row=len(new_excel_df) + 1, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
+
+total_fails_cell.fill = header_fill
+total_fails_cell.font = header_font
+
+overall_impact_cell.fill = header_fill
+overall_impact_cell.font = header_font
+
+# Save the modified Excel file
+wb.save(output_filename)
