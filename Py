@@ -71,11 +71,11 @@ new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', 
 output_filename = 'new_excel.xlsx'
 new_excel_df.to_excel(output_filename, index=False)
 
-# Read merged_data.xlsx
+# Read the merged_data.xlsx file
 merged_data_df = pd.read_excel('merged_data.xlsx')
 
-# Merge new_excel.xlsx with ObligorId from merged_data.xlsx based on Counterparty Name
-final_df = pd.merge(new_excel_df, merged_data_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
+# Merge new_excel.xlsx with 'ObligorId' from merged_data.xlsx based on 'Counterparty Name'
+new_excel_df = pd.merge(new_excel_df, merged_data_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
 
 # Open the Excel file
 wb = load_workbook(output_filename)
@@ -102,20 +102,14 @@ for row in ws.iter_rows():
         cell.border = border
         cell.alignment = Alignment(horizontal='right')  # Align cell content to the right
 
-# Total Fails column
-#for i, value in enumerate(new_excel_df['Total Fails'], start=2):
-#    cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Total Fails') + 1)
-#    if value != '-':
-#        cell.fill = condition_fill
-
 # Overall Economic Impact column
 for i, value in enumerate(new_excel_df['Overall Economic Impact'], start=2):
     cell = ws.cell(row=i, column=new_excel_df.columns.get_loc('Overall Economic Impact') + 1)
     if value < 0:
         cell.fill = condition_fill
-        cell.value='('+str(abs(value))+')'
+        cell.value = '(' + str(abs(value)) + ')'  # Display negative values in parentheses
     else:
-        #do not fill
+        # do not fill
         pass
 
 # Loop through all cells to set font color
@@ -140,14 +134,6 @@ total_fails_cell.font = header_font
 
 overall_impact_cell.fill = header_fill
 overall_impact_cell.font = header_font
-
-# Set column width to fit the content optimally
-for column in ws.columns:
-    max_length = 0
-    column_values = [cell.value for cell in column]
-    max_length = max(len(str(cell)) for cell in column_values if cell is not None)
-    column_letter = column[0].column_letter
-    ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
 
 # Save the modified Excel file
 wb.save(output_filename)
