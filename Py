@@ -13,7 +13,7 @@ merged_df = pd.read_excel('merged_data.xlsx')
 merged_output_df = pd.merge(master_df, merged_df[['Counterparty Name', 'ObligorId', 'CashScore']], on='Counterparty Name', how='left')
 
 # Define selected columns
-selected_columns = ['Counterparty Name', 'ObligorId', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'CashScore']
+selected_columns = ['ObligorId', 'Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'CashScore']
 
 # Reorder columns and select required columns
 output_df = merged_output_df[selected_columns]
@@ -21,8 +21,8 @@ output_df = merged_output_df[selected_columns]
 # Define new columns
 new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
 
-# Insert new columns after "Trade Price"
-output_df = output_df.reindex(columns=output_df.columns.tolist()[:4] + new_columns + output_df.columns.tolist()[4:])
+# Insert new columns after "CashScore"
+output_df = output_df.reindex(columns=output_df.columns.tolist()[:14] + new_columns + output_df.columns.tolist()[14:])
 
 # Add dummy data to new columns
 import random
@@ -38,6 +38,9 @@ output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%
 output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
 today = datetime.today()
 output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+
+# Fill empty cells with 'NA' for new columns
+output_df[['ObligorId', 'CashScore']] = output_df[['ObligorId', 'CashScore']].fillna('NA')
 
 # Define output filename
 output_filename = 'output.xlsx'
