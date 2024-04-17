@@ -38,9 +38,10 @@ ws = wb.active
 
 # Set header cells background color to RGB value (192, 0, 0)
 header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
 for cell in ws[1]:
     cell.fill = header_fill
-    cell.font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+    cell.font = header_font
 
 # Set conditional formatting color to RGB value (255, 199, 206)
 condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
