@@ -58,7 +58,8 @@ for counterparty in unique_counterparties:
         'Vd+7': [vd_plus_7],
         'Vd>7': [vd_gt_7],
         'Total Fails': [total_fails],
-        'Overall Economic Impact': [overall_economic_impact]
+        'Overall Economic Impact': [overall_economic_impact],
+        'ObligorId': cp_data['ObligorId'].iloc[0]  # Add ObligorId for the counterparty
     })
     
     # Append the DataFrame to the list
@@ -71,7 +72,7 @@ new_excel_df = pd.concat(dfs, ignore_index=True)
 new_excel_df = new_excel_df.replace({0: '-'})
 
 # Append the sum of total fails and overall economic impact at the end
-new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
+new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum, '']
 
 # Save the new DataFrame to a new Excel file
 output_filename = 'new_excel.xlsx'
