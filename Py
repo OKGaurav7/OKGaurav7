@@ -67,15 +67,15 @@ new_excel_df = new_excel_df.replace({0: '-'})
 # Append the sum of total fails and overall economic impact at the end
 new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', total_fails_sum, overall_economic_impact_sum]
 
-# Save the new DataFrame to a new Excel file
-output_filename = 'new_excel.xlsx'
-new_excel_df.to_excel(output_filename, index=False)
-
 # Read the merged_data.xlsx file
 merged_data_df = pd.read_excel('merged_data.xlsx')
 
 # Merge new_excel.xlsx with 'ObligorId' from merged_data.xlsx based on 'Counterparty Name'
 new_excel_df = pd.merge(new_excel_df, merged_data_df[['Counterparty Name', 'ObligorId']], on='Counterparty Name', how='left')
+
+# Save the new DataFrame to a new Excel file
+output_filename = 'new_excel.xlsx'
+new_excel_df.to_excel(output_filename, index=False)
 
 # Open the Excel file
 wb = load_workbook(output_filename)
