@@ -1,4 +1,7 @@
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font
+from datetime import datetime
 
 # Read the output.csv file into a DataFrame
 output_df = pd.read_csv('output.csv')
@@ -67,16 +70,35 @@ new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', 'Total', 
 # Replace 0 with '-' in the DataFrame
 new_excel_df = new_excel_df.replace(0, '-')
 
-# Apply border to all cells
-border = {'border': '1px solid black'}
-new_excel_df = new_excel_df.style.set_properties(**border)
-
-# Apply fill color to negative values in 'Economic Impact' column
-def apply_color(value):
-    color = 'white' if value >= 0 else 'rgb(255,199,206)'
-    return f'background-color: {color}'
-
-new_excel_df = new_excel_df.applymap(apply_color, subset=['Overall Economic Impact'])
-
 # Save the new DataFrame to a new Excel file
-new_excel_df.to_excel('new_excel.xlsx', index=False, engine='openpyxl')
+new_excel_df.to_excel('new_excel.xlsx', index=False)
+
+# Open the Excel file
+wb = load_workbook('new_excel.xlsx')
+ws = wb.active
+
+# Set header cells background color to RGB value (192, 0, 0)
+header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+for cell in ws[1]:
+    cell.fill = header_fill
+    cell.font = header_font
+
+# Set conditional formatting color to RGB value (255, 199, 206) for Economic Impact column
+condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+# Economic Impact column
+for i, value in enumerate(output_df['Economic Impact'], start=2):
+    cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
+    if value < 0:
+        cell.fill = condition_fill
+
+# Add cell borders to all cells
+border = PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+
+for row in ws.iter_rows():
+    for cell in row:
+        cell.fill = border
+
+# Save the modified Excel file
+wb.save('new_excel.xlsx')
