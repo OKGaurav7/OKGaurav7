@@ -52,7 +52,7 @@ output_df = output_df[custom_column_order]
 # Define output filename
 output_filename = 'output.xlsx'
 
-# Write data to Excel file
+# Write data to Excel file with separate sheets for Buy and Sell data
 with pd.ExcelWriter(output_filename) as writer:
     output_df.to_excel(writer, index=False, sheet_name='All Data')
     
@@ -66,55 +66,56 @@ with pd.ExcelWriter(output_filename) as writer:
 
 # Open the Excel file
 wb = load_workbook(output_filename)
-ws = wb.active
 
-# Set header cells background color to RGB value (192, 0, 0)
-header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
-header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
-for cell in ws[1]:
-    cell.fill = header_fill
-    cell.font = header_font
+# Loop through each sheet to apply formatting
+for sheet in wb.sheetnames:
+    ws = wb[sheet]
+    
+    # Set header cells background color to RGB value (192, 0, 0)
+    header_fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)  # Set font color to white and bold
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
 
-# Set conditional formatting color to RGB value (255, 199, 206)
-condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    # Set conditional formatting color to RGB value (255, 199, 206)
+    condition_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-# Economic Impact column
-for i, value in enumerate(output_df['Economic Impact'], start=2):
-    cell = ws.cell(row=i, column=output_df.columns.get_loc('Economic Impact') + 1)
-    if value < 0:
-        cell.fill = condition_fill
+    # Economic Impact column
+    for i, value in enumerate(ws.iter_rows(min_row=2, min_col=output_df.columns.get_loc('Economic Impact') + 1, max_col=output_df.columns.get_loc('Economic Impact') + 1), start=2):
+        if value[0].value is not None and value[0].value < 0:
+            value[0].fill = condition_fill
 
-# Days Elapsed column
-for i, value in enumerate(output_df['Days Elapsed'], start=2):
-    cell = ws.cell(row=i, column=output_df.columns.get_loc('Days Elapsed') + 1)
-    if value >= 7:
-        cell.fill = condition_fill
+    # Days Elapsed column
+    for i, value in enumerate(ws.iter_rows(min_row=2, min_col=output_df.columns.get_loc('Days Elapsed') + 1, max_col=output_df.columns.get_loc('Days Elapsed') + 1), start=2):
+        if value[0].value is not None and value[0].value >= 7:
+            value[0].fill = condition_fill
 
-# Loop through all cells to set font color
-for row in ws.iter_rows():
-    for cell in row:
-        if cell.fill == header_fill:
-            cell.font = header_font
-        elif cell.fill == condition_fill:
-            cell.font = Font(color="C00000")  # Set font color to red
+    # Loop through all cells to set font color
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.fill == header_fill:
+                cell.font = header_font
+            elif cell.fill == condition_fill:
+                cell.font = Font(color="C00000")  # Set font color to red
 
-# Add cell borders to all cells
-border = Border(left=Side(border_style='thin', color='000000'),
-                right=Side(border_style='thin', color='000000'),
-                top=Side(border_style='thin', color='000000'),
-                bottom=Side(border_style='thin', color='000000'))
+    # Add cell borders to all cells
+    border = Border(left=Side(border_style='thin', color='000000'),
+                    right=Side(border_style='thin', color='000000'),
+                    top=Side(border_style='thin', color='000000'),
+                    bottom=Side(border_style='thin', color='000000'))
 
-for row in ws.iter_rows():
-    for cell in row:
-        cell.border = border
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.border = border
 
-# Set column width to fit the content optimally
-for column in ws.columns:
-    max_length = 0
-    column_values = [cell.value for cell in column]
-    max_length = max(len(str(cell)) for cell in column_values if cell is not None)
-    column_letter = column[0].column_letter
-    ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
+    # Set column width to fit the content optimally
+    for column in ws.columns:
+        max_length = 0
+        column_values = [cell.value for cell in column]
+        max_length = max(len(str(cell)) for cell in column_values if cell is not None)
+        column_letter = column[0].column_letter
+        ws.column_dimensions[column_letter].width = max_length + 2  # Adding some extra space
 
 # Save the modified Excel file
 wb.save(output_filename)
