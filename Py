@@ -3,17 +3,20 @@ import pandas as pd
 # Read data from master.xlsx
 master_df = pd.read_excel('master.xlsx')
 
+# Read data from Takara.xlsx
+takara_df = pd.read_excel('Takara.xlsx')
+
 # Read data from prodman.xlsx
 prodman_df = pd.read_excel('prodman.xlsx')
 
-# Merge data based on Counterparty Name (from master.xlsx) and Obligor (from prodman.xlsx)
-merged_df = pd.merge(master_df[['Counterparty Name']], prodman_df[['Obligor', 'TradingAccountCode', 'CashScore']], left_on='Counterparty Name', right_on='Obligor', how='left')
+# Merge data from master.xlsx and Takara.xlsx based on 'Counterparty Name' and 'currentObligorId'
+merged_df = pd.merge(master_df, takara_df, left_on='Counterparty Name', right_on='currentObligorId', how='left')
 
-# Rename columns as per requirement
-merged_df.rename(columns={'TradingAccountCode': 'ObligorId'}, inplace=True)
+# Merge data obtained from step 2 with prodman.xlsx based on 'obligorId'
+final_merged_df = pd.merge(merged_df, prodman_df[['obligorId', 'CashScore']], left_on='obligorId', right_on='obligorId', how='left')
 
-# Fill missing values with "NA"
-merged_df.fillna('NA', inplace=True)
+# Select required columns
+selected_columns = ['Counterparty Name', 'obligorId', 'CashScore']
 
-# Write the merged data to a new Excel file
-merged_df.to_excel('merged_data.xlsx', index=False)
+# Save the final DataFrame to output.xlsx
+final_merged_df[selected_columns].to_excel('output.xlsx', index=False)
