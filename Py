@@ -166,11 +166,12 @@ def generate_new_excel():
         vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
         vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
         vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+        vd_plus_6 = len(cp_data[cp_data['Days Elapsed'] == 6])
         vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
         vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
 
         # Calculate total fails
-        total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+        total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_6 + vd_plus_7 + vd_gt_7
         total_fails_sum += total_fails
 
         # Create a DataFrame for the current counterparty
@@ -183,6 +184,7 @@ def generate_new_excel():
             'Vd+3': [vd_plus_3],
             'Vd+4': [vd_plus_4],
             'Vd+5': [vd_plus_5],
+            'Vd+6': [vd_plus_6],
             'Vd+7': [vd_plus_7],
             'Vd>7': [vd_gt_7],
             'Total Fails': [total_fails]
@@ -198,7 +200,7 @@ def generate_new_excel():
     new_excel_df = new_excel_df.replace({0: '-'})
 
     # Append the sum of total fails at the end
-    new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
+    new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
 
     # Save the new DataFrame to the existing Excel file without overwriting existing sheets
     output_filename = 'output.xlsx'
