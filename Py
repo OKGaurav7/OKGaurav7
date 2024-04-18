@@ -5,7 +5,7 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime
 import random
 
-def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000", column_widths=None):
+def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000"):
     # Set header cells background color
     header_fill = PatternFill(start_color=header_fill_color, end_color=header_fill_color, fill_type="solid")
     header_font = Font(color=header_font_color, bold=True)  # Set font color and bold
@@ -63,12 +63,21 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
         if ws.cell(row=1, column=col[0].column).value in ["Trade Date", "Value Date"]:
             for cell in col:
                 cell.number_format = 'yyyy-mm-dd'
+          
+    if column_widths:
+        for col_name, width incolumn_widths.items():
+            col_idx=ws[1].index(ws[col_name][0])+1
+            ws.column_dimensions[get_column_letter(col_idx)].width=width
 
     # Adjust column width
-    if column_widths:
-        for col_name, width in column_widths.items():
-            col_idx = ws[1].index(ws[col_name][0]) + 1
-            ws.column_dimensions[get_column_letter(col_idx)].width = width
+    #for col in ws.columns:
+        #max_length = 0
+        #column = [cell for cell in col if cell.value is not None]
+        #if column:
+            #max_length = max(len(str(cell.value)) for cell in column)
+            #adjusted_width = (max_length + 2) * 1.2
+            #ws.column_dimensions[col[0].column_letter].width = adjusted_width
+    
 
 def generate_output():
     # Read the master CSV file
@@ -140,18 +149,12 @@ def generate_output():
     # Open the Excel file
     wb = load_workbook(output_filename)
 
-    # Define column widths for each column (customize as needed)
-    column_widths = {
-        'Trade Date': 12,
-        'Value Date': 12,
-        'Trade Price': 10,
-        # Add more columns and widths as needed
-    }
+    
 
-    # Apply styling to each sheet with custom column widths
+    # Apply styling to each sheet
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        apply_styling(ws, column_widths=column_widths)
+        apply_styling(ws)
 
     # Save the modified Excel file
     wb.save(output_filename)
@@ -366,3 +369,5 @@ def generate_new_excel():
 
 generate_output()
 generate_new_excel()
+
+#kk
