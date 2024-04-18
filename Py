@@ -1,16 +1,20 @@
 import pandas as pd
 
-# Read data from prodman.xlsx
+# Read data from prodman.xlsx and takara.xlsx
 prodman_df = pd.read_excel('prodman.xlsx')
-
-# Read data from takara.xlsx
 takara_df = pd.read_excel('takara.xlsx')
 
-# Merge data from prodman.xlsx and takara.xlsx
-xyz = pd.merge(prodman_df, takara_df, left_on='ObligorId', right_on='currentObligorId', how='inner')
+# Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
+xyz_df = pd.merge(prodman_df[['obligorId']], takara_df[['currentObligorId']], left_on='obligorId', right_on='currentObligorId', how='inner')
 
 # Read data from master.xlsx
 master_df = pd.read_excel('master.xlsx')
 
-# Merge master_df and xyz on 'Counterparty RDM Id' and 'Trading account code'
-result_df = pd.merge(master_df, xyz, left_on='Counterparty RDM Id', right_on='Trading account code', how='inner')
+# Merge data from master.xlsx and xyz_df based on 'counterparty RDM Id' and 'Trading account code'
+merged_df = pd.merge(master_df[['counterparty RDM Id']], xyz_df[['Trading account code']], left_on='counterparty RDM Id', right_on='Trading account code', how='left')
+
+# Fill missing values with 'NA'
+merged_df.fillna('NA', inplace=True)
+
+# Print the merged dataframe
+print(merged_df)
