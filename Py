@@ -218,6 +218,12 @@ def generate_new_excel():
     total_fails_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
     total_fails_cell.font = Font(color="FFFFFF", bold=True)
 
+    # Apply conditional formatting to the last cell of "Vd>7" column
+    last_row = ws.max_row
+    vd_gt_7_cell = ws.cell(row=last_row, column=ws.max_column - 1)
+    vd_gt_7_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    vd_gt_7_cell.font = Font(color="FFFFFF", bold=True)
+
     # Save the modified Excel file
     wb.save(output_filename)
 
