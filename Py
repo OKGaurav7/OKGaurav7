@@ -1,22 +1,16 @@
 import pandas as pd
 
-# Read data from master.xlsx
-master_df = pd.read_excel('master.xlsx')
-
-# Read data from Takara.xlsx
-takara_df = pd.read_excel('Takara.xlsx')
-
 # Read data from prodman.xlsx
 prodman_df = pd.read_excel('prodman.xlsx')
 
-# Merge data from takara.xlsx and prodman.xlsx based on 'currentObligerRdmId'
-x = pd.merge(takara_df, prodman_df, on='currentObligerRdmId', how='inner')
+# Read data from takara.xlsx
+takara_df = pd.read_excel('takara.xlsx')
 
-# Merge master data and merged data from step 1 based on 'counterparty RDM Id'
-final_merged_df = pd.merge(master_df, x, left_on='counterparty RDM Id', right_on='counterparty RDM Id', how='inner')
+# Merge data from prodman.xlsx and takara.xlsx
+xyz = pd.merge(prodman_df, takara_df, left_on='ObligorId', right_on='currentObligorId', how='inner')
 
-# Select 'Counterparty Name' and 'Cash Score' columns
-result_df = final_merged_df[['Counterparty Name', 'Cash Score']]
+# Read data from master.xlsx
+master_df = pd.read_excel('master.xlsx')
 
-# Save the result to a new Excel file
-result_df.to_excel('counterparty_cash_score.xlsx', index=False)
+# Merge master_df and xyz on 'Counterparty RDM Id' and 'Trading account code'
+result_df = pd.merge(master_df, xyz, left_on='Counterparty RDM Id', right_on='Trading account code', how='inner')
