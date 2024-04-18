@@ -1,24 +1,41 @@
 ---------------------------------------------------------------------------
-AttributeError                            Traceback (most recent call last)
-<ipython-input-3-dd46abe1280b> in <module>()
-    380 
-    381 # Generate output Excel file
---> 382 generate_output(master_path, prodman_path, output_path)
-    383 
-    384 # Generate new Excel file with additional data
+KeyError                                  Traceback (most recent call last)
+C:\ProgramData\Continuum\Anaconda\lib\site-packages\openpyxl\utils\cell.py in get_column_letter(idx)
+    110     try:
+--> 111         return _STRING_COL_CACHE[idx]
+    112     except KeyError:
 
-<ipython-input-3-dd46abe1280b> in generate_output(master_path, prodman_path, output_path)
-    150     for sheet in wb.sheetnames:
-    151         ws = wb[sheet]
---> 152         apply_styling(ws)
-    153 
-    154     # Save the modified Excel file
+KeyError: 'A'
 
-<ipython-input-3-dd46abe1280b> in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color, alignment_horizontal)
-     66             max_length = max(len(str(cell.value)) for cell in column)
-     67             adjusted_width = (max_length + 2) * 1.2
----> 68             ws.column_dimensions[col[0].column_letter].width = adjusted_width
-     69 
-     70 def generate_output(master_path, prodman_path, output_path):
+During handling of the above exception, another exception occurred:
 
-AttributeError: 'Cell' object has no attribute 'column_letter'
+ValueError                                Traceback (most recent call last)
+<ipython-input-4-da39344f788e> in <module>()
+    382 
+    383 # Generate output Excel file
+--> 384 generate_output(master_path, prodman_path, output_path)
+    385 
+    386 # Generate new Excel file with additional data
+
+<ipython-input-4-da39344f788e> in generate_output(master_path, prodman_path, output_path)
+    152     for sheet in wb.sheetnames:
+    153         ws = wb[sheet]
+--> 154         apply_styling(ws)
+    155 
+    156     # Save the modified Excel file
+
+<ipython-input-4-da39344f788e> in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color, alignment_horizontal)
+     67             max_length = max(len(str(cell.value)) for cell in column)
+     68             adjusted_width = (max_length + 2) * 1.2
+---> 69             ws.column_dimensions[get_column_letter(column_index)].width = adjusted_width
+     70             #ws.column_dimensions[col[0].column_letter].width = adjusted_width
+     71 
+
+C:\ProgramData\Continuum\Anaconda\lib\site-packages\openpyxl\utils\cell.py in get_column_letter(idx)
+    111         return _STRING_COL_CACHE[idx]
+    112     except KeyError:
+--> 113         raise ValueError("Invalid column index {0}".format(idx))
+    114 
+    115 
+
+ValueError: Invalid column index A
