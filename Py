@@ -52,19 +52,6 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
                     if cell.value is not None and cell.value > 7:
                         cell.fill = condition_fill
 
-    # Apply conditional formatting to the last cell of "Total Fails" column in "New Data" sheet
-    if ws.title == 'New Data':
-        total_fails_column = None
-        for cell in ws[1]:
-            if cell.value == 'Total Fails':
-                total_fails_column = cell.column
-                break
-
-        if total_fails_column:
-            last_row = ws.max_row
-            last_cell = ws.cell(row=last_row, column=total_fails_column)
-            last_cell.fill = condition_fill
-
     # Apply borders to all cells
     for row in ws.iter_rows():
         for cell in row:
@@ -224,6 +211,12 @@ def generate_new_excel():
 
     # Apply styling
     apply_styling(ws)
+
+    # Apply conditional formatting to the last cell of "Total Fails" column
+    last_row = ws.max_row
+    total_fails_cell = ws.cell(row=last_row, column=ws.max_column)
+    total_fails_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    total_fails_cell.font = Font(color="FFFFFF", bold=True)
 
     # Save the modified Excel file
     wb.save(output_filename)
