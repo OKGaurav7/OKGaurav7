@@ -35,7 +35,7 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
         for row in ws.iter_rows(min_row=2):
             for cell in row:
                 if cell.column == economic_impact_col:
-                    if cell.value is not None and cell.value < 0:
+                    if isinstance(cell.value, (int, float)) and cell.value < 0:
                         cell.fill = condition_fill
 
     # Apply conditional formatting to "Days Elapsed" column
@@ -49,7 +49,16 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
         for row in ws.iter_rows(min_row=2):
             for cell in row:
                 if cell.column == days_elapsed_col:
-                    if cell.value is not None and cell.value > 7:
+                    if isinstance(cell.value, int) and cell.value > 7:
+                        cell.fill = condition_fill
+
+    # Apply conditional formatting to specified columns
+    target_columns = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+6', 'Vd+7', 'Vd>7']
+    for column in target_columns:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == ws[f'{column}1'].column:
+                    if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = condition_fill
 
     # Apply borders to all cells
@@ -117,31 +126,21 @@ def generate_output():
     output_filename = 'output.xlsx'
 
     # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        output_df.to_excel(writer, index=False, sheet_name='All Data')
-
-        # Filter data where operation type is Buy
-        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
-
-        # Filter data where operation type is Sell
-        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+    output_df.to_excel(output_filename, index=False, sheet_name='All Data')
 
     # Open the Excel file
     wb = load_workbook(output_filename)
+    ws = wb.active
 
-    # Apply styling to each sheet
-    for sheet in wb.sheetnames:
-        ws = wb[sheet]
-        apply_styling(ws)
+    # Apply styling
+    apply_styling(ws)
 
     # Save the modified Excel file
     wb.save(output_filename)
 
 def generate_new_excel():
     # Read the output.xlsx file into a DataFrame
-    output_df = pd.read_excel('output.xlsx', sheet_name='All Data')
+    output_df = pd.read_excel('output.xlsx')
 
     # Extract unique counterparty names and corresponding obligorIds
     unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
