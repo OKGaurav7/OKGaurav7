@@ -25,11 +25,18 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
         cell.font = header_font
 
     # Apply conditional formatting to "Economic Impact" column
-    economic_impact_col_idx = next(ws.iter_cols(min_col=1, max_col=ws.max_column, min_row=1, max_row=1, values_only=True)).index('Economic Impact')
-    for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=economic_impact_col_idx+1, max_col=economic_impact_col_idx+1):
-        for cell in row:
-            if cell.value is not None and cell.value < 0:
-                cell.fill = condition_fill
+    economic_impact_col = None
+    for cell in ws[1]:
+        if cell.value == 'Economic Impact':
+            economic_impact_col = cell.column
+            break
+
+    if economic_impact_col:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == economic_impact_col:
+                    if cell.value is not None and cell.value < 0:
+                        cell.fill = condition_fill
 
     # Apply borders to all cells
     for row in ws.iter_rows():
