@@ -58,6 +58,21 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
         for cell in row:
             cell.border = border
 
+    # Format "Trade Date" and "Value Date" columns as short date
+    for col in ws.iter_cols(min_col=1, max_col=ws.max_column):
+        if ws.cell(row=1, column=col[0].column).value in ["Trade Date", "Value Date"]:
+            for cell in col:
+                cell.number_format = 'yyyy-mm-dd'
+
+    # Adjust column width
+    for col in ws.columns:
+        max_length = 0
+        column = [cell for cell in col if cell.value is not None]
+        if column:
+            max_length = max(len(str(cell.value)) for cell in column)
+            adjusted_width = (max_length + 2) * 1.2
+            ws.column_dimensions[col[0].column_letter].width = adjusted_width
+
 def generate_output():
     # Read the master CSV file
     master_df = pd.read_excel('master.xlsx')
@@ -93,9 +108,11 @@ def generate_output():
     output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
     output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
 
-    # Round 'Economic Impact' and 'LQA (Liq Score)' columns to integers
+     # Round 'Economic Impact' and 'LQA (Liq Score)' columns to integers
     output_df['Economic Impact'] = output_df['Economic Impact'].astype(int)
     output_df['LQA (Liq Score)'] = output_df['LQA (Liq Score)'].astype(int)
+    output_df['Trade Price']=output_df['Trade Price'].round(2)
+
 
     # Calculate days elapsed
     output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
@@ -324,13 +341,25 @@ def generate_new_excel():
                     if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
+    # Apply conditional formatting to column "Vd>7"
+    vd_gt_7_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd>7':
+            vd_gt_7_column = cell.column
+            break
+
+    if vd_gt_7_column:
+        ws.column_dimensions[get_column_letter(vd_gt_7_column)].width=6.5
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_gt_7_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
     # Save the modified Excel file
     wb.save(output_filename)
 
-# Generate the output Excel file
 generate_output()
-
-# Generate and update the new Excel file
 generate_new_excel()
 
-print("Excel files generated and updated successfully!")
+#kk
