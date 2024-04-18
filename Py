@@ -1,24 +1,64 @@
----------------------------------------------------------------------------
-AttributeError                            Traceback (most recent call last)
-<ipython-input-15-cd2713cf106e> in <module>()
-    376 
-    377 # Generate output Excel file
---> 378 generate_output()
-    379 
-    380 # Generate new Excel file with additional data
+def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000", alignment_horizontal="right"):
+    # Set header cells background color
+    header_fill = PatternFill(start_color=header_fill_color, end_color=header_fill_color, fill_type="solid")
+    header_font = Font(color=header_font_color, bold=True)  # Set font color and bold
 
-<ipython-input-15-cd2713cf106e> in generate_output()
-    135     for sheet in wb.sheetnames:
-    136         ws = wb[sheet]
---> 137         apply_styling(ws)
-    138 
-    139     # Save the modified Excel file
+    # Set conditional formatting color
+    condition_fill = PatternFill(start_color=condition_fill_color, end_color=condition_fill_color, fill_type="solid")
 
-<ipython-input-15-cd2713cf106e> in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color, alignment_horizontal)
-     66             max_length = max(len(str(cell.value)) for cell in column)
-     67             adjusted_width = (max_length + 2) * 1.2
----> 68             ws.column_dimensions[col[0].column_letter].width = adjusted_width
-     69 
-     70 def generate_output():
+    # Add cell borders
+    border = Border(left=Side(border_style='thin', color=border_color),
+                    right=Side(border_style='thin', color=border_color),
+                    top=Side(border_style='thin', color=border_color),
+                    bottom=Side(border_style='thin', color=border_color))
 
-AttributeError: 'Cell' object has no attribute 'column_letter'
+    # Apply styles to header cells
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+
+    # Apply conditional formatting to "Economic Impact" column
+    economic_impact_col = None
+    for cell in ws[1]:
+        if cell.value == 'Economic Impact':
+            economic_impact_col = cell.column
+            break
+
+    if economic_impact_col:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == economic_impact_col:
+                    if cell.value is not None and cell.value < 0:
+                        cell.fill = condition_fill
+
+    # Apply conditional formatting to "Days Elapsed" column
+    days_elapsed_col = None
+    for cell in ws[1]:
+        if cell.value == 'Days Elapsed':
+            days_elapsed_col = cell.column
+            break
+
+    if days_elapsed_col:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == days_elapsed_col:
+                    if cell.value is not None and cell.value > 7:
+                        cell.fill = condition_fill
+
+    # Apply borders to all cells
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.border = border
+            cell.alignment = Alignment(horizontal=alignment_horizontal)
+
+    # Adjust column width
+    for col in ws.columns:
+        max_length = 0
+        for cell in col:
+            if cell.value:
+                cell_length = len(str(cell.value))
+                if cell_length > max_length:
+                    max_length = cell_length
+        adjusted_width = (max_length + 2) * 1.2
+        col_letter = col[0].column_letter
+        ws.column_dimensions[col_letter].width = adjusted_width
