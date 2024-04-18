@@ -1,3 +1,10 @@
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+from datetime import datetime
+import random
+
 def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000", alignment_horizontal="right"):
     # Set header cells background color
     header_fill = PatternFill(start_color=header_fill_color, end_color=header_fill_color, fill_type="solid")
@@ -54,11 +61,324 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
     # Adjust column width
     for col in ws.columns:
         max_length = 0
-        for cell in col:
-            if cell.value:
-                cell_length = len(str(cell.value))
-                if cell_length > max_length:
-                    max_length = cell_length
-        adjusted_width = (max_length + 2) * 1.2
-        col_letter = col[0].column_letter
-        ws.column_dimensions[col_letter].width = adjusted_width
+        column = [cell for cell in col if cell.value is not None]
+        if column:
+            max_length = max(len(str(cell.value)) for cell in column)
+            adjusted_width = (max_length + 2) * 1.2
+            ws.column_dimensions[col[0].column_letter].width = adjusted_width
+
+def generate_output():
+    # Read the master CSV file
+    master_df = pd.read_excel('master.xlsx')
+
+    # Read the merged data
+    merged_df = pd.read_excel('merged_data.xlsx')
+
+    # Merge the data based on 'Counterparty Name'
+    merged_output_df = pd.merge(master_df, merged_df[['Counterparty Name', 'ObligorId', 'CashScore']], on='Counterparty Name', how='left')
+
+    # Define selected columns
+    selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'ObligorId', 'CashScore']
+
+    # Reorder columns and select required columns
+    output_df = merged_output_df[selected_columns]
+
+    # Define new columns
+    new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
+
+    # Define the desired column order
+    custom_column_order = ['ObligorId','Counterparty Name', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
+
+    # Insert new columns at specific position
+    for i, col in enumerate(new_columns, start=1):
+        output_df.insert(output_df.columns.get_loc('ObligorId') + i, col, '')
+
+    # Add dummy data to new columns
+    output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
+    output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))]  # Generating some negative values for testing
+    output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
+
+    # Convert dates to string format
+    output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
+
+    # Calculate days elapsed
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+    today = datetime.today()
+    output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+
+    # Fill NA for empty cells in new columns
+    output_df[['ObligorId', 'CashScore']] = output_df[['ObligorId', 'CashScore']].fillna('NA')
+
+    # Reorder columns based on custom_column_order
+    output_df = output_df[custom_column_order]
+
+    # Define output filename
+    output_filename = 'output.xlsx'
+
+    # Write data to Excel file
+    with pd.ExcelWriter(output_filename) as writer:
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+
+        # Filter data where operation type is Buy
+        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
+
+        # Filter data where operation type is Sell
+        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+
+    # Open the Excel file
+    wb = load_workbook(output_filename)
+
+    # Apply styling to each sheet
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        apply_styling(ws)
+
+    # Save the modified Excel file
+    wb.save(output_filename)
+
+def generate_new_excel():
+    # Read the output.xlsx file into a DataFrame
+    output_df = pd.read_excel('output.xlsx', sheet_name='All Data')
+
+    # Extract unique counterparty names and corresponding obligorIds
+    unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
+
+    # Create an empty list to store DataFrames for each counterparty
+    dfs = []
+
+    # Initialize variable for sum of total fails
+    total_fails_sum = 0
+
+    # Iterate over unique counterparty names and obligorIds
+    for index, row in unique_counterparties.iterrows():
+        obligor_id = row['ObligorId']
+        counterparty = row['Counterparty Name']
+
+        cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+
+        # Calculate values for each date range
+        vd = len(cp_data[cp_data['Days Elapsed'] == 0])
+        vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+        vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+        vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+        vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+        vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+        vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+        vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+
+        # Calculate total fails
+        total_fails = vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_7 + vd_gt_7
+        total_fails_sum += total_fails
+
+        # Create a DataFrame for the current counterparty
+        cp_df = pd.DataFrame({
+            'ObligorId': [obligor_id],  # Add obligorId column
+            'Counterparty Name': [counterparty],
+            'Vd': [vd],
+            'Vd+1': [vd_plus_1],
+            'Vd+2': [vd_plus_2],
+            'Vd+3': [vd_plus_3],
+            'Vd+4': [vd_plus_4],
+            'Vd+5': [vd_plus_5],
+            'Vd+7': [vd_plus_7],
+            'Vd>7': [vd_gt_7],
+            'Total Fails': [total_fails]
+        })
+
+        # Append the DataFrame to the list
+        dfs.append(cp_df)
+
+    # Concatenate all DataFrames in the list
+    new_excel_df = pd.concat(dfs, ignore_index=True)
+
+    # Replace cell values of 0 with '-'
+    new_excel_df = new_excel_df.replace({0: '-'})
+
+    # Append the sum of total fails at the end
+    new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
+
+    # Save the new DataFrame to the existing Excel file without overwriting existing sheets
+    output_filename = 'output.xlsx'
+    with pd.ExcelWriter(output_filename, mode='a', engine='openpyxl') as writer:
+        new_excel_df.to_excel(writer, index=False, sheet_name='New Data')
+
+    # Open the Excel file
+    wb = load_workbook(output_filename)
+    ws = wb['New Data']
+
+    # Apply styling
+    apply_styling(ws)
+
+    # Apply conditional formatting to the last cell of "Total Fails" column
+    last_row = ws.max_row
+    total_fails_cell = ws.cell(row=last_row, column=ws.max_column)
+    total_fails_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    total_fails_cell.font = Font(color="FFFFFF", bold=True)
+
+    # Apply conditional formatting to the last cell of "Vd>7" column
+    last_row = ws.max_row
+    vd_gt_7_cell = ws.cell(row=last_row, column=ws.max_column - 1)
+    vd_gt_7_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    vd_gt_7_cell.font = Font(color="FFFFFF", bold=True)
+
+    # Apply conditional formatting to column "Vd"
+    vd_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd':
+            vd_column = cell.column
+            break
+
+    if vd_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+1"
+    vd_plus_1_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+1':
+            vd_plus_2_column = cell.column
+            break
+
+    if vd_plus_2_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_2_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+2"
+    vd_plus_2_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+2':
+            vd_plus_2_column = cell.column
+            break
+
+    if vd_plus_2_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_2_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+3"
+    vd_plus_3_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+3':
+            vd_plus_3_column = cell.column
+            break
+
+    if vd_plus_3_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_3_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+4"
+    vd_plus_4_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+4':
+            vd_plus_4_column = cell.column
+            break
+
+    if vd_plus_4_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_4_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+5"
+    vd_plus_5_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+5':
+            vd_plus_5_column = cell.column
+            break
+
+    if vd_plus_5_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_5_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+6"
+    vd_plus_6_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+6':
+            vd_plus_6_column = cell.column
+            break
+
+    if vd_plus_6_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_6_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd+7"
+    vd_plus_7_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd+7':
+            vd_plus_7_column = cell.column
+            break
+
+    if vd_plus_7_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_plus_7_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Apply conditional formatting to column "Vd>7"
+    vd_gt_7_column = None
+    for cell in ws[1]:
+        if cell.value == 'Vd>7':
+            vd_gt_7_column = cell.column
+            break
+
+    if vd_gt_7_column:
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == vd_gt_7_column:
+                    if isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
+    # Replace cell values of 0 with '-'
+    new_excel_df = new_excel_df.replace({0: '-'})
+    
+    # Save the modified Excel file
+    wb.save(output_filename)
+
+# Read data from master.xlsx
+master_df = pd.read_excel('master.xlsx')
+
+# Read data from prodman.xlsx
+prodman_df = pd.read_excel('prodman.xlsx')
+
+# Merge data based on Counterparty Name (from master.xlsx) and Obligor (from prodman.xlsx)
+merged_df = pd.merge(master_df[['Counterparty Name']], prodman_df[['Obligor', 'TradingAccountCode', 'CashScore']], left_on='Counterparty Name', right_on='Obligor', how='left')
+
+# Rename columns as per requirement
+merged_df.rename(columns={'TradingAccountCode': 'ObligorId'}, inplace=True)
+
+# Fill missing values with "NA"
+merged_df.fillna('NA', inplace=True)
+
+# Write the merged data to a new Excel file
+merged_df.to_excel('merged_data.xlsx', index=False)
+
+# Generate output Excel file
+generate_output()
+
+# Generate new Excel file with additional data
+generate_new_excel()
+
+
+#perfecto
