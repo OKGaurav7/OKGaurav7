@@ -57,7 +57,12 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
     for row in ws.iter_rows():
         for cell in row:
             cell.border = border
-            #cell.alignment = Alignment(horizontal=alignment_horizontal)
+
+    # Format "Trade Date" and "Value Date" columns as short date
+    for col in ws.iter_cols(min_col=1, max_col=ws.max_column):
+        if ws.cell(row=1, column=col[0].column).value in ["Trade Date", "Value Date"]:
+            for cell in col:
+                cell.number_format = 'yyyy-mm-dd'
 
     # Adjust column width
     for col in ws.columns:
@@ -315,21 +320,6 @@ def generate_new_excel():
                     if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Apply conditional formatting to column "Vd+6"
-    vd_plus_6_column = None
-    for cell in ws[1]:
-        if cell.value == 'Vd+6':
-            vd_plus_6_column = cell.column
-            break
-
-    if vd_plus_6_column:
-        ws.column_dimensions[get_column_letter(vd_plus_6_column)].width=6.5
-        for row in ws.iter_rows(min_row=2):
-            for cell in row:
-                if cell.column == vd_plus_6_column:
-                    if isinstance(cell.value, int) and cell.value > 0:
-                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-
     # Apply conditional formatting to column "Vd+7"
     vd_plus_7_column = None
     for cell in ws[1]:
@@ -345,7 +335,7 @@ def generate_new_excel():
                     if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Apply conditional formatting to column "Vd"
+    # Apply conditional formatting to column "Vd>7"
     vd_gt_7_column = None
     for cell in ws[1]:
         if cell.value == 'Vd>7':
@@ -360,35 +350,8 @@ def generate_new_excel():
                     if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Replace cell values of 0 with '-'
-    new_excel_df = new_excel_df.replace({0: '-'})
-    
     # Save the modified Excel file
     wb.save(output_filename)
 
-# Read data from master.xlsx
-master_df = pd.read_excel('master.xlsx')
-
-# Read data from prodman.xlsx
-prodman_df = pd.read_excel('prodman.xlsx')
-
-# Merge data based on Counterparty Name (from master.xlsx) and Obligor (from prodman.xlsx)
-merged_df = pd.merge(master_df[['Counterparty Name']], prodman_df[['Obligor', 'TradingAccountCode', 'CashScore']], left_on='Counterparty Name', right_on='Obligor', how='left')
-
-# Rename columns as per requirement
-merged_df.rename(columns={'TradingAccountCode': 'ObligorId'}, inplace=True)
-
-# Fill missing values with "NA"
-merged_df.fillna('NA', inplace=True)
-
-# Write the merged data to a new Excel file
-merged_df.to_excel('merged_data.xlsx', index=False)
-
-# Generate output Excel file
 generate_output()
-
-# Generate new Excel file with additional data
 generate_new_excel()
-
-
-#perfecto
