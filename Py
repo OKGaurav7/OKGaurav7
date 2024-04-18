@@ -1,20 +1,23 @@
-import pandas as pd
+---------------------------------------------------------------------------
+NameError                                 Traceback (most recent call last)
+Cell In[128], line 393
+    390     # Save the modified Excel file
+    391     wb.save(output_filename)
+--> 393 generate_output()
+    394 generate_new_excel()
 
-# Read data from prodman.xlsx and takara.xlsx
-prodman_df = pd.read_excel('prodman.xlsx')
-takara_df = pd.read_excel('takara.xlsx')
+Cell In[128], line 180, in generate_output()
+    178 for sheet in wb.sheetnames:
+    179     ws = wb[sheet]
+--> 180     apply_styling(ws)
+    182 # Save the modified Excel file
+    183 wb.save(output_filename)
 
-# Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
-xyz_df = pd.merge(prodman_df[['obligorId']], takara_df[['currentObligorId']], left_on='obligorId', right_on='currentObligorId', how='inner')
+Cell In[128], line 67, in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color)
+     64         for cell in col:
+     65             cell.number_format = 'yyyy-mm-dd'
+---> 67 if column_widths:
+     68     for col_name, width in column_widths.items():
+     69         col_idx=ws[1].index(ws[col_name][0])+1
 
-# Read data from master.xlsx
-master_df = pd.read_excel('master.xlsx')
-
-# Merge data from master.xlsx and xyz_df based on 'counterparty RDM Id' and 'Trading account code'
-merged_df = pd.merge(master_df[['counterparty RDM Id']], xyz_df[['Trading account code']], left_on='counterparty RDM Id', right_on='Trading account code', how='left')
-
-# Fill missing values with 'NA'
-merged_df.fillna('NA', inplace=True)
-
-# Print the merged dataframe
-print(merged_df)
+NameError: name 'column_widths' is not defined
