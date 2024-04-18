@@ -1,22 +1,41 @@
-NameError                                 Traceback (most recent call last)
-Cell In[130], line 393
+TypeError                                 Traceback (most recent call last)
+Cell In[131], line 393
     390     # Save the modified Excel file
     391     wb.save(output_filename)
 --> 393 generate_output()
     394 generate_new_excel()
 
-Cell In[130], line 180, in generate_output()
+Cell In[131], line 180, in generate_output()
     178 for sheet in wb.sheetnames:
     179     ws = wb[sheet]
---> 180     apply_styling(ws)
+--> 180     apply_styling(ws, column_widths)
     182 # Save the modified Excel file
     183 wb.save(output_filename)
 
-Cell In[130], line 67, in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color)
-     64         for cell in col:
-     65             cell.number_format = 'yyyy-mm-dd'
----> 67 if column_widths:
-     68     for col_name, width in column_widths.items():
-     69         col_idx=ws[1].index(ws[col_name][0])+1
+Cell In[131], line 10, in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color)
+      8 def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000"):
+      9     # Set header cells background color
+---> 10     header_fill = PatternFill(start_color=header_fill_color, end_color=header_fill_color, fill_type="solid")
+     11     header_font = Font(color=header_font_color, bold=True)  # Set font color and bold
+     13     # Set conditional formatting color
 
-NameError: name 'column_widths' is not defined
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/styles/fills.py:91, in PatternFill.__init__(self, patternType, fgColor, bgColor, fill_type, start_color, end_color)
+     89 if start_color is not None:
+     90     fgColor = start_color
+---> 91 self.fgColor = fgColor
+     92 if end_color is not None:
+     93     bgColor = end_color
+
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/styles/colors.py:134, in ColorDescriptor.__set__(self, instance, value)
+    132 if isinstance(value, str):
+    133     value = Color(rgb=value)
+--> 134 super(ColorDescriptor, self).__set__(instance, value)
+
+File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/openpyxl/descriptors/base.py:42, in Typed.__set__(self, instance, value)
+     39 if not isinstance(value, self.expected_type):
+     40     if (not self.allow_none
+     41         or (self.allow_none and value is not None)):
+---> 42         raise TypeError('expected ' + str(self.expected_type))
+     43 super(Typed, self).__set__(instance, value)
+
+TypeError: expected <class 'openpyxl.styles.colors.Color'>
