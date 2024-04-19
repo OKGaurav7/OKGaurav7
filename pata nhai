@@ -1,16 +1,17 @@
-columns_to_format = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+6', 'Vd+7', 'Vd>7']
+import pandas as pd
 
-for column_name in columns_to_format:
-    column_letter = None
-    for cell in ws[1]:
-        if cell.value == column_name:
-            column_letter = get_column_letter(cell.column)
-            break
+# Assuming df is your DataFrame
+# Assuming 'existing_sheet.xlsx' is your existing Excel sheet
 
-    if column_letter:
-        ws.column_dimensions[column_letter].width = 6.5
-        for row in ws.iter_rows(min_row=2):
-            for cell in row:
-                if cell.column == cell.column:
-                    if isinstance(cell.value, int) and cell.value > 0:
-                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+# Load the existing Excel file
+existing_excel = pd.ExcelWriter('existing_sheet.xlsx', engine='openpyxl')
+existing_df = pd.read_excel(existing_excel, sheet_name='Sheet1')
+
+# Assuming new_df is the DataFrame you want to write
+new_df = pd.DataFrame({'data': [1, 2, 3]})  # Example DataFrame
+
+# Write the new DataFrame to the existing Excel sheet starting from column 'U'
+new_df.to_excel(existing_excel, sheet_name='Sheet1', startcol=20, index=False, header=False)
+
+# Save changes
+existing_excel.save()
