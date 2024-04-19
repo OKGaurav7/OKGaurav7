@@ -1,9 +1,9 @@
-# Apply conditional formatting to column "currentObligerRdmId"
-obligor_id_column = None
+# Apply conditional formatting to column "currentObligerFullName"
+obligor_name_column = None
 for cell in ws[1]:
-    if cell.value == 'currentObligerRdmId':
-        obligor_id_column = cell.column
+    if cell.value == 'currentObligerFullName':
+        obligor_name_column = cell.column
         break
 
-if obligor_id_column:
-    ws.column_dimensions[get_column_letter(obligor_id_column)].width = 10  # Adjust column width to 10
+if obligor_name_column:
+    ws.column_dimensions[get_column_letter(obligor_name_column)].width = 10  # Adjust column width to 10
