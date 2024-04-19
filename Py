@@ -38,81 +38,64 @@ def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", co
                 if cell.column == economic_impact_col:
                     if cell.value is not None and cell.value < 0:
                         cell.fill = condition_fill
-
     # Apply conditional formatting to "Days Elapsed" column
     days_elapsed_col = None
     for cell in ws[1]:
         if cell.value == 'Days Elapsed':
             days_elapsed_col = cell.column
             break
-
     if days_elapsed_col:
         for row in ws.iter_rows(min_row=2):
             for cell in row:
                 if cell.column == days_elapsed_col:
                     if cell.value is not None and cell.value > 7:
                         cell.fill = condition_fill
-
     # Apply borders to all cells
     for row in ws.iter_rows():
         for cell in row:
             cell.border = border
-            #cell.alignment = Alignment(horizontal=alignment_horizontal)
-    
     # Format "Trade Date" and "Value Date" columns as short date
     for col in ws.iter_cols(min_col=1, max_col=ws.max_column):
         if ws.cell(row=1, column=col[0].column).value in ["Trade Date", "Value Date"]:
             for cell in col:
                 cell.number_format = 'yyyy-mm-dd'
 
-    # Adjust column width
-    for col in ws.columns:
-        max_length = 0
-        column = [cell for cell in col if cell.value is not None]
-        if column:
-            max_length = max(len(str(cell.value)) for cell in column)
-            adjusted_width = (max_length + 2) * 1.2
-            ws.column_dimensions[col[0].column_letter].width = adjusted_width
-
 def generate_output():
-    # Read the master CSV file
-    master_df = pd.read_excel('master.xlsx')
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel('master.xlsx')
+    Takara = pd.read_excel('Takara.xlsx')
+    prodman = pd.read_excel('prodman.xlsx')
 
-    # Read the merged data
-    merged_df = pd.read_excel('merged_data.xlsx')
-
-    # Merge the data based on 'Counterparty Name'
-    merged_output_df = pd.merge(master_df, merged_df[['Counterparty Name', 'ObligorId', 'CashScore']], on='Counterparty Name', how='left')
+    # Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
+    abc_df = pd.merge(master, Takara, left_on='Counterparty RDM Id', right_on='externalId', how='left')
+    merged_output_df = pd.merge(abc_df, prodman, left_on='currentObligorRdmId', right_on='ObligorId', how='left')
 
     # Define selected columns
-    selected_columns = ['Counterparty Name', 'Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name', 'ObligorId', 'CashScore']
+    selected_columns = ['Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name','currentObligorRdmId', 'currentObligorFullName', 'CashScore']
 
     # Reorder columns and select required columns
     output_df = merged_output_df[selected_columns]
-
-    # Define new columns
+    output_df=output_df.drop_duplicates()
     new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
+    custom_column_order = ['currentObligorRdmId','currentObligorFullName', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
 
-    # Define the desired column order
-    custom_column_order = ['ObligorId','Counterparty Name', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
-
-    # Insert new columns at specific position
+    
     for i, col in enumerate(new_columns, start=1):
-        output_df.insert(output_df.columns.get_loc('ObligorId') + i, col, '')
+        output_df.insert(output_df.columns.get_loc('currentObligorRdmId') + i, col, '')
 
-    # Add dummy data to new columns
-    output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
+   
+    #output_df['CBBT_PX_ASK'] = [random.randint(1, 100) for _ in range(len(output_df))]
     output_df['Economic Impact'] = [random.uniform(-10000, 10000) for _ in range(len(output_df))]  # Generating some negative values for testing
     output_df['LQA (Liq Score)'] = [random.uniform(1000, 10000) for _ in range(len(output_df))]
 
-    # Convert dates to string format
+    # Convert dates
     output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
     output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
 
-     # Round 'Economic Impact' and 'LQA (Liq Score)' columns to integers
-    output_df['Economic Impact'] = output_df['Economic Impact'].astype(int)
-    output_df['LQA (Liq Score)'] = output_df['LQA (Liq Score)'].astype(int)
-    output_df['Trade Price']=output_df['Trade Price'].round(2)
+    
+    #output_df['Economic Impact'] = output_df['Economic Impact'].astype(int)
+    #output_df['LQA (Liq Score)'] = output_df['LQA (Liq Score)'].astype(int)
+    output_df['Trade Price'] = output_df['Trade Price'].round(2)
 
     # Calculate days elapsed
     output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
@@ -120,10 +103,13 @@ def generate_output():
     output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
 
     # Fill NA for empty cells in new columns
-    output_df[['ObligorId', 'CashScore']] = output_df[['ObligorId', 'CashScore']].fillna('NA')
+    output_df[['currentObligorRdmId', 'CashScore']] = output_df[['currentObligorRdmId', 'CashScore']].fillna('NA')
 
     # Reorder columns based on custom_column_order
     output_df = output_df[custom_column_order]
+
+    output_df['CBBT_PX_ASK'] = "=" + "BDP(" + output_df['ISIN Primary Instrument Reference'] + " Corp," + "\$"+"G"+ "$1" + ")"
+    output_df['LQA (Liq Score)']= "="+"BDP("+ output_df['ISIN Primary Instrument Reference'] + " Corp," + '"LQA_LIQUIDITY_SCORE")'
 
     # Define output filename
     output_filename = 'output.xlsx'
@@ -142,11 +128,153 @@ def generate_output():
 
     # Open the Excel file
     wb = load_workbook(output_filename)
-
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]   
     # Apply styling to each sheet
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         apply_styling(ws)
+
+        # Apply conditional formatting and adjust column width for 'currentObligorRdmId'
+        obligor_id_column = None
+        for cell in ws[1]:
+            if cell.value == 'currentObligorRdmId':
+                obligor_id_column = cell.column
+                break
+
+        if obligor_id_column:
+            ws.column_dimensions[get_column_letter(obligor_id_column)].width = 20
+
+        # Apply conditional formatting and adjust column width for 'currentObligorFullName'
+        obligor_name_column = None
+        for cell in ws[1]:
+            if cell.value == 'currentObligorFullName':
+                obligor_name_column = cell.column
+                break
+
+        if obligor_name_column:
+            ws.column_dimensions[get_column_letter(obligor_name_column)].width = 43  
+
+        # Apply conditional formatting and adjust column width for 'CashScore'
+        cash_score_column = None
+        for cell in ws[1]:
+            if cell.value == 'CashScore':
+                cash_score_column = cell.column
+                break
+
+        if cash_score_column:
+            ws.column_dimensions[get_column_letter(cash_score_column)].width = 10  
+
+        # Apply conditional formatting and adjust column width for 'Operation Type'
+        operation_type_column = None
+        for cell in ws[1]:
+            if cell.value == 'Operation Type':
+                operation_type_column = cell.column
+                break
+
+        if operation_type_column:
+            ws.column_dimensions[get_column_letter(operation_type_column)].width = 15  
+
+        # Apply conditional formatting and adjust column width for 'Trade Date'
+        trade_date_column = None
+        for cell in ws[1]:
+            if cell.value == 'Trade Date':
+                trade_date_column = cell.column
+                break
+
+        if trade_date_column:
+            ws.column_dimensions[get_column_letter(trade_date_column)].width = 10  
+
+        
+        # Apply conditional formatting to column "Trade Price"
+        trade_price_column = None
+        for cell in ws[1]:
+            if cell.value == 'Trade Price':
+                trade_price_column = cell.column
+                break
+
+        if trade_price_column:
+            ws.column_dimensions[get_column_letter(trade_price_column)].width = 11  
+
+        # Apply conditional formatting and adjust column width for 'Value Date'
+        value_date_column = None
+        for cell in ws[1]:
+            if cell.value == 'Value Date':
+                value_date_column = cell.column
+                break
+
+        if value_date_column:
+            ws.column_dimensions[get_column_letter(value_date_column)].width = 12  
+
+        # Apply conditional formatting and adjust column width for 'Primary Original Quantity'
+        quantity_column = None
+        for cell in ws[1]:
+            if cell.value == 'Primary Original Quantity':
+                quantity_column = cell.column
+                break
+
+        if quantity_column:
+            ws.column_dimensions[get_column_letter(quantity_column)].width = 25  
+
+        # Apply conditional formatting and adjust column width for 'Settlement Instrument Name'
+        settlement_column = None
+        for cell in ws[1]:
+            if cell.value == 'Settlement Instrument Name':
+                settlement_column = cell.column
+                break
+
+        if settlement_column:
+            ws.column_dimensions[get_column_letter(settlement_column)].width = 27  
+
+        # Apply conditional formatting and adjust column width for 'ISIN Primary Instrument Reference'
+        isin_column = None
+        for cell in ws[1]:
+            if cell.value == 'ISIN Primary Instrument Reference':
+                isin_column = cell.column
+                break
+
+        if isin_column:
+            ws.column_dimensions[get_column_letter(isin_column)].width = 32  
+
+        # Apply conditional formatting and adjust column width for 'Primary Instrument Long Name'
+        instrument_name_column = None
+        for cell in ws[1]:
+            if cell.value == 'Primary Instrument Long Name':
+                instrument_name_column = cell.column
+                break
+
+        if instrument_name_column:
+            ws.column_dimensions[get_column_letter(instrument_name_column)].width = 67 
+
+        # Apply conditional formatting and adjust column width for 'SMO Trade Reference'
+        smo_trade_column = None
+        for cell in ws[1]:
+            if cell.value == 'SMO Trade Reference':
+                smo_trade_column = cell.column
+                break
+
+        if smo_trade_column:
+            ws.column_dimensions[get_column_letter(smo_trade_column)].width = 20  
+
+        # Apply conditional formatting and adjust column width for 'Internal Status Narrative'
+        internal_status_column = None
+        for cell in ws[1]:
+            if cell.value == 'Internal Status Narrative':
+                internal_status_column = cell.column
+                break
+
+        if internal_status_column:
+            ws.column_dimensions[get_column_letter(internal_status_column)].width = 56  
+        
+        sales_person_column = None
+        for cell in ws[1]:
+            if cell.value == 'Sales Person Name':
+                sales_person_column = cell.column
+                break
+        if sales_person_column:
+            ws.column_dimensions[get_column_letter(sales_person_column)].width = 19  
+
+        
 
     # Save the modified Excel file
     wb.save(output_filename)
@@ -156,7 +284,7 @@ def generate_new_excel():
     output_df = pd.read_excel('output.xlsx', sheet_name='All Data')
 
     # Extract unique counterparty names and corresponding obligorIds
-    unique_counterparties = output_df[['Counterparty Name', 'ObligorId']].drop_duplicates()
+    unique_counterparties = output_df[['currentObligorFullName', 'currentObligorRdmId']].drop_duplicates()
 
     # Create an empty list to store DataFrames for each counterparty
     dfs = []
@@ -166,10 +294,10 @@ def generate_new_excel():
 
     # Iterate over unique counterparty names and obligorIds
     for index, row in unique_counterparties.iterrows():
-        obligor_id = row['ObligorId']
-        counterparty = row['Counterparty Name']
+        obligor_id = row['currentObligorRdmId']
+        counterparty = row['currentObligorFullName']
 
-        cp_data = output_df[output_df['Counterparty Name'] == counterparty]
+        cp_data = output_df[output_df['currentObligorFullName'] == counterparty]
 
         # Calculate values for each date range
         vd = len(cp_data[cp_data['Days Elapsed'] == 0])
@@ -186,13 +314,7 @@ def generate_new_excel():
         total_fails_sum += total_fails
 
         # Create a DataFrame for the current counterparty
-        cp_df = pd.DataFrame({
-            'ObligorId': [obligor_id],  # Add obligorId column
-            'Counterparty Name': [counterparty],
-            'Vd': [vd],
-            'Vd+1': [vd_plus_1],
-            'Vd+2': [vd_plus_2],
-            'Vd+3': [vd_plus_3],
+        cp_df = pd.DataFrame({'currentObligorRdmId': [obligor_id],'currentObligorFullName': [counterparty],'Vd': [vd],'Vd+1': [vd_plus_1],'Vd+2': [vd_plus_2],'Vd+3': [vd_plus_3],
             'Vd+4': [vd_plus_4],
             'Vd+5': [vd_plus_5],
             'Vd+7': [vd_plus_7],
@@ -205,9 +327,6 @@ def generate_new_excel():
 
     # Concatenate all DataFrames in the list
     new_excel_df = pd.concat(dfs, ignore_index=True)
-
-    # Replace cell values of 0 with '-'
-    new_excel_df = new_excel_df.replace({0: '-'})
 
     # Append the sum of total fails at the end
     new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
@@ -235,6 +354,30 @@ def generate_new_excel():
     vd_gt_7_cell = ws.cell(row=last_row, column=ws.max_column - 1)
     vd_gt_7_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
     vd_gt_7_cell.font = Font(color="FFFFFF", bold=True)
+
+    new_excel_df = new_excel_df.replace({0: '-'})
+
+    # Apply conditional formatting to column "currentObligerRdmId"
+    obligor_id_column = None
+    for cell in ws[1]:
+        if cell.value == 'currentObligerRdmId':
+            obligor_id_column = cell.column
+            break
+
+    if obligor_id_column:
+        ws.column_dimensions[get_column_letter(obligor_id_column)].width =20 
+
+    # Apply conditional formatting to column "currentObligerFullName"
+    obligor_name_column = None
+    for cell in ws[1]:
+        if cell.value == 'currentObligerFullName':
+            obligor_name_column = cell.column
+            break
+
+    if obligor_name_column:
+        ws.column_dimensions[get_column_letter(obligor_name_column)].width = 42  
+
+    
 
     # Apply conditional formatting to column "Vd"
     vd_column = None
@@ -371,35 +514,7 @@ def generate_new_excel():
                     if isinstance(cell.value, int) and cell.value > 0:
                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 
-    # Replace cell values of 0 with '-'
-    new_excel_df = new_excel_df.replace({0: '-'})
-    
-    # Save the modified Excel file
     wb.save(output_filename)
 
-# Read data from master.xlsx
-master_df = pd.read_excel('master.xlsx')
-
-# Read data from prodman.xlsx
-prodman_df = pd.read_excel('prodman.xlsx')
-
-# Merge data based on Counterparty Name (from master.xlsx) and Obligor (from prodman.xlsx)
-merged_df = pd.merge(master_df[['Counterparty Name']], prodman_df[['Obligor', 'TradingAccountCode', 'CashScore']], left_on='Counterparty Name', right_on='Obligor', how='left')
-
-# Rename columns as per requirement
-merged_df.rename(columns={'TradingAccountCode': 'ObligorId'}, inplace=True)
-
-# Fill missing values with "NA"
-merged_df.fillna('NA', inplace=True)
-
-# Write the merged data to a new Excel file
-merged_df.to_excel('merged_data.xlsx', index=False)
-
-# Generate output Excel file
 generate_output()
-
-# Generate new Excel file with additional data
 generate_new_excel()
-
-
-#perfecto
