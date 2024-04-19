@@ -1,9 +1,139 @@
-# Apply conditional formatting to column "currentObligerFullName"
+# Apply conditional formatting and adjust column width for 'Operation Type'
+operation_type_column = None
+for cell in ws[1]:
+    if cell.value == 'Operation Type':
+        operation_type_column = cell.column
+        break
+
+if operation_type_column:
+    ws.column_dimensions[get_column_letter(operation_type_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Trade Date'
+trade_date_column = None
+for cell in ws[1]:
+    if cell.value == 'Trade Date':
+        trade_date_column = cell.column
+        break
+
+if trade_date_column:
+    ws.column_dimensions[get_column_letter(trade_date_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Trade Price'
+trade_price_column = None
+for cell in ws[1]:
+    if cell.value == 'Trade Price':
+        trade_price_column = cell.column
+        break
+
+if trade_price_column:
+    ws.column_dimensions[get_column_letter(trade_price_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Value Date'
+value_date_column = None
+for cell in ws[1]:
+    if cell.value == 'Value Date':
+        value_date_column = cell.column
+        break
+
+if value_date_column:
+    ws.column_dimensions[get_column_letter(value_date_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Primary Original Quantity'
+quantity_column = None
+for cell in ws[1]:
+    if cell.value == 'Primary Original Quantity':
+        quantity_column = cell.column
+        break
+
+if quantity_column:
+    ws.column_dimensions[get_column_letter(quantity_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Settlement Instrument Name'
+settlement_column = None
+for cell in ws[1]:
+    if cell.value == 'Settlement Instrument Name':
+        settlement_column = cell.column
+        break
+
+if settlement_column:
+    ws.column_dimensions[get_column_letter(settlement_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'ISIN Primary Instrument Reference'
+isin_column = None
+for cell in ws[1]:
+    if cell.value == 'ISIN Primary Instrument Reference':
+        isin_column = cell.column
+        break
+
+if isin_column:
+    ws.column_dimensions[get_column_letter(isin_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Primary Instrument Long Name'
+instrument_name_column = None
+for cell in ws[1]:
+    if cell.value == 'Primary Instrument Long Name':
+        instrument_name_column = cell.column
+        break
+
+if instrument_name_column:
+    ws.column_dimensions[get_column_letter(instrument_name_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'SMO Trade Reference'
+smo_trade_column = None
+for cell in ws[1]:
+    if cell.value == 'SMO Trade Reference':
+        smo_trade_column = cell.column
+        break
+
+if smo_trade_column:
+    ws.column_dimensions[get_column_letter(smo_trade_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Internal Status Narrative'
+internal_status_column = None
+for cell in ws[1]:
+    if cell.value == 'Internal Status Narrative':
+        internal_status_column = cell.column
+        break
+
+if internal_status_column:
+    ws.column_dimensions[get_column_letter(internal_status_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'Sales Person Name'
+sales_person_column = None
+for cell in ws[1]:
+    if cell.value == 'Sales Person Name':
+        sales_person_column = cell.column
+        break
+
+if sales_person_column:
+    ws.column_dimensions[get_column_letter(sales_person_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'currentObligorRdmId'
+obligor_id_column = None
+for cell in ws[1]:
+    if cell.value == 'currentObligorRdmId':
+        obligor_id_column = cell.column
+        break
+
+if obligor_id_column:
+    ws.column_dimensions[get_column_letter(obligor_id_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'currentObligorFullName'
 obligor_name_column = None
 for cell in ws[1]:
-    if cell.value == 'currentObligerFullName':
+    if cell.value == 'currentObligorFullName':
         obligor_name_column = cell.column
         break
 
 if obligor_name_column:
     ws.column_dimensions[get_column_letter(obligor_name_column)].width = 10  # Adjust column width to 10
+
+# Apply conditional formatting and adjust column width for 'CashScore'
+cash_score_column = None
+for cell in ws[1]:
+    if cell.value == 'CashScore':
+        cash_score_column = cell.column
+        break
+
+if cash_score_column:
+    ws.column_dimensions[get_column_letter(cash_score_column)].width = 10  # Adjust column width to 10
