@@ -1,8 +1,2 @@
-
-master = pd.read_excel('master.xlsx')
-    Takara = pd.read_excel('Takara.xlsx')
-    prodman=pd.read_excel('prodman.xlsx')
-
-    # Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
-    abc_df = pd.merge(master,Takara, left_on='Counterparty RDM Id',right_on='externalId', how='left')
-    merged_output_df=pd.merge(abc_df,prodman, left_on='currentObligorRdmId',right_on='ObligorId',how='left')
+# Define selected columns
+    selected_columns = ['Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name','currentObligorRdmId', 'currentObligorFullName', 'CashScore']
