@@ -1,1 +1,1 @@
-
+ws_all_data.insert(ws_all_data.max_column + 1, 'New Column', new_column_series)
