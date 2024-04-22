@@ -21,12 +21,6 @@ def generate_output():
     for i, col in enumerate(new_columns, start=1):
         output_df.insert(output_df.columns.get_loc('currentObligorRdmId') + i, col, '')
 
-    l1=["PX_DISC_MID","","USD","EUR","AUD","JPY","GBP"]
-    l2=["","","1",'=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")','=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")','=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")','=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")']
-
-    exchange=pd.DataFrame()
-    exchange["one"]=l1
-    exchange["two"]=l2
 
     output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
     output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
