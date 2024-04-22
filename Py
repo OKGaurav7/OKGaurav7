@@ -1,77 +1,91 @@
-AssertionError                            Traceback (most recent call last)
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/internals/construction.py:969, in _finalize_columns_and_data(content, columns, dtype)
-    968 try:
---> 969     columns = _validate_or_indexify_columns(contents, columns)
-    970 except AssertionError as err:
-    971     # GH#26429 do not raise user-facing AssertionError
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from datetime import datetime
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/internals/construction.py:1017, in _validate_or_indexify_columns(content, columns)
-   1015 if not is_mi_list and len(columns) != len(content):  # pragma: no cover
-   1016     # caller's responsibility to check for this...
--> 1017     raise AssertionError(
-   1018         f"{len(columns)} columns passed, passed data had "
-   1019         f"{len(content)} columns"
-   1020     )
-   1021 elif is_mi_list:
-   1022 
-   1023     # check if nested list column, length of each sub-list should be equal
+def apply_styling(ws):
+    # Add styling logic here
+    pass
 
-AssertionError: 18 columns passed, passed data had 7 columns
+def generate_output():
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel('master.xlsx')
+    Takara = pd.read_excel('Takara.xlsx')
+    prodman = pd.read_excel('prodman.xlsx')
 
-The above exception was the direct cause of the following exception:
+    # Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
+    abc_df = pd.merge(master, Takara, left_on='Counterparty RDM Id', right_on='externalId', how='left')
+    merged_output_df = pd.merge(abc_df, prodman, left_on='currentObligorRdmId', right_on='ObligorId', how='left')
 
-ValueError                                Traceback (most recent call last)
-Cell In[5], line 485
-    481                         cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-    483     wb.save(output_filename)
---> 485 generate_output()
-    486 generate_new_excel()
+    # Define selected columns
+    selected_columns = ['Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name','currentObligorRdmId', 'currentObligorFullName', 'CashScore']
 
-Cell In[5], line 130, in generate_output()
-    128 l1 = ["PX_DISC_MID", "", "USD", "EUR", "AUD", "JPY", "GBP"]
-    129 l2 = ["", "", 1, '=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")']
---> 130 new_data_df = pd.DataFrame([l1, l2], columns=output_df.columns)
-    131 output_df = pd.concat([output_df, new_data_df], axis=1)
-    133 # Filter data where operation type is Buy
+    # Reorder columns and select required columns
+    output_df = merged_output_df[selected_columns]
+    output_df = output_df.drop_duplicates()
+    new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
+    custom_column_order = ['currentObligorRdmId','currentObligorFullName', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/frame.py:746, in DataFrame.__init__(self, data, index, columns, dtype, copy)
-    744     if columns is not None:
-    745         columns = ensure_index(columns)
---> 746     arrays, columns, index = nested_data_to_arrays(
-    747         # error: Argument 3 to "nested_data_to_arrays" has incompatible
-    748         # type "Optional[Collection[Any]]"; expected "Optional[Index]"
-    749         data,
-    750         columns,
-    751         index,  # type: ignore[arg-type]
-    752         dtype,
-    753     )
-    754     mgr = arrays_to_mgr(
-    755         arrays,
-    756         columns,
-   (...)
-    759         typ=manager,
-    760     )
-    761 else:
+    
+    for i, col in enumerate(new_columns, start=1):
+        output_df.insert(output_df.columns.get_loc('currentObligorRdmId') + i, col, '')
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/internals/construction.py:510, in nested_data_to_arrays(data, columns, index, dtype)
-    507 if is_named_tuple(data[0]) and columns is None:
-    508     columns = ensure_index(data[0]._fields)
---> 510 arrays, columns = to_arrays(data, columns, dtype=dtype)
-    511 columns = ensure_index(columns)
-    513 if index is None:
+    output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/internals/construction.py:875, in to_arrays(data, columns, dtype)
-    872     data = [tuple(x) for x in data]
-    873     arr = _list_to_arrays(data)
---> 875 content, columns = _finalize_columns_and_data(arr, columns, dtype)
-    876 return content, columns
+    
+    output_df['Trade Price'] = output_df['Trade Price'].round(2)
 
-File /opt/ailabs/aire/envs/aire-jupyter/lib/python3.9/site-packages/pandas/core/internals/construction.py:972, in _finalize_columns_and_data(content, columns, dtype)
-    969     columns = _validate_or_indexify_columns(contents, columns)
-    970 except AssertionError as err:
-    971     # GH#26429 do not raise user-facing AssertionError
---> 972     raise ValueError(err) from err
-    974 if len(contents) and contents[0].dtype == np.object_:
-    975     contents = _convert_object_array(contents, dtype=dtype)
+    # Calculate days elapsed
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+    today = datetime.today()
+    output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
 
-ValueError: 18 columns passed, passed data had 7 columns
+    # Fill NA for empty cells in new columns
+    output_df[['currentObligorRdmId', 'CashScore']] = output_df[['currentObligorRdmId', 'CashScore']].fillna('NA')
+
+    # Reorder columns based on custom_column_order
+    output_df = output_df[custom_column_order]
+
+    output_df['CBBT_PX_ASK'] = "=" + "BDP(" + output_df['ISIN Primary Instrument Reference'] + " Corp," + "G1" + ")"
+    output_df['LQA (Liq Score)' ]= "=" + "BDP(" + output_df['ISIN Primary Instrument Reference'] + " Corp," + '"LQA_LIQUIDITY_SCORE")'
+
+    # Define output filename
+    output_filename = 'output.xlsx'
+
+    # Write data to Excel file
+    with pd.ExcelWriter(output_filename) as writer:
+        # Append the new data to the output DataFrame
+        l1 = ["PX_DISC_MID", "", "USD", "EUR", "AUD", "JPY", "GBP"]
+        l2 = ["", "", "", '=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")']
+        new_data_df = pd.DataFrame([l1, l2], columns=['', '', '', 'EUR', 'AUD', 'JPY', 'GBP'])
+        output_df = pd.concat([output_df, new_data_df], axis=1)
+
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+
+        # Filter data where operation type is Buy
+        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
+
+        # Filter data where operation type is Sell
+        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+
+    # Open the Excel file
+    wb = load_workbook(output_filename)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]   
+    # Apply styling to each sheet
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        apply_styling(ws)
+
+        # Apply conditional formatting and adjust column width for each column
+        for column_name in output_df.columns:
+            column_letter = get_column_letter(ws.max_column)
+            ws.column_dimensions[column_letter].width = len(column_name) + 5
+
+    # Save the modified Excel file
+    wb.save(output_filename)
+
+generate_output()
