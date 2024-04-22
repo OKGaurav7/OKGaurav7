@@ -1,17 +1,21 @@
-import pandas as pd
 
-# Assuming df is your DataFrame
-# Assuming 'existing_sheet.xlsx' is your existing Excel sheet
+import win32com.client as win32
 
-# Load the existing Excel file
-existing_excel = pd.ExcelWriter('existing_sheet.xlsx', engine='openpyxl')
-existing_df = pd.read_excel(existing_excel, sheet_name='Sheet1')
+# Initialize Outlook application
+outlook = win32.Dispatch('Outlook.Application')
 
-# Assuming new_df is the DataFrame you want to write
-new_df = pd.DataFrame({'data': [1, 2, 3]})  # Example DataFrame
+# Create a new email
+mail = outlook.CreateItem(0)
 
-# Write the new DataFrame to the existing Excel sheet starting from column 'U'
-new_df.to_excel(existing_excel, sheet_name='Sheet1', startcol=20, index=False, header=False)
+# Set recipient, subject, and body of the email
+mail.To = 'recipient@example.com'
+mail.Subject = 'Data from Sheets a, b, c'
+mail.Body = 'Please find the data from Sheets a, b, c attached.\n\nBest regards,\nYour Name'
 
-# Save changes
-existing_excel.save()
+# Attach the sheets a, b, c from the output.xlsx file
+attachment_paths = ['C:\\path\\to\\output.xlsx!a', 'C:\\path\\to\\output.xlsx!b', 'C:\\path\\to\\output.xlsx!c']
+for attachment_path in attachment_paths:
+    mail.Attachments.Add(Source=attachment_path)
+
+# Send the email
+mail.Send()
