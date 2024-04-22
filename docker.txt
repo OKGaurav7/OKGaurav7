@@ -1,12 +1,18 @@
-    # Add the new column with provided formulas
-    new_column_series = pd.Series([
-        '"=" + "BDP(" +'"EURUSD BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
-        '"=" + "BDP(" +'"AUDUSD BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
-        '"=" + "BDP(" +'"JPYUSD BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
-        '"=" + "BDP(" +'"GBPUSD BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"'
-    ], name='New Column')
+# Add the new column with provided formulas
+new_column_series_2 = pd.Series([
+    '"=" + "BDP(" +'"USDJPY BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
+    '"=" + "BDP(" +'"EURJPY BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
+    '"=" + "BDP(" +'"AUDJPY BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"',
+    '"=" + "BDP(" +'"GBPJPY BGN Curncy"'+","+'"PX_CLOSE_1D"' + ")"'
+], name='Another New Column')
 
-    max_column_index = ws_all_data.max_column
+max_column_index = ws_all_data.max_column
 
-    for idx, value in enumerate(new_column_series, start=1):
-        ws_all_data.cell(row=idx, column=max_column_index + 1, value=value)
+for idx, value in enumerate(new_column_series_2, start=1):
+    ws_all_data.cell(row=idx, column=max_column_index + 2, value=value)  # Use max_column + 2 to insert after the previously added column
+
+# Apply styling to "All Data" sheet
+apply_styling(ws_all_data)
+
+# Save the modified Excel file
+wb.save(output_filename)
