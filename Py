@@ -1,20 +1,21 @@
-import win32com.client as win32
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
-# Initialize Outlook application
-outlook = win32.Dispatch('Outlook.Application')
+# Load the workbook
+wb = load_workbook('output.xlsx')
+ws = wb.active
 
-# Create a new email
-mail = outlook.CreateItem(0)
+# Define the range for the VLOOKUP function
+vlookup_range = "$T$1:$U$5"
 
-# Set recipient, subject, and body of the email
-mail.To = 'recipient@example.com'
-mail.Subject = 'Data from Sheets a, b, c'
-mail.Body = 'Please find the data from Sheets a, b, c attached.\n\nBest regards,\nYour Name'
+for row in range(1, ws.max_row + 1):
+    # Skip the header row
+    if row == 1:
+        continue
+    
+    # Set the formula for the "Economic Impact" column
+    formula = f"=(-(G{row}-F{row}))/100*L{row}*VLOOKUP(M{row},{vlookup_range},2,FALSE)"
+    ws[f'H{row}'] = formula
 
-# Attach the sheets a, b, c from the output.xlsx file
-attachment_paths = ['output.xlsx!a', 'output.xlsx!b', 'output.xlsx!c']
-for attachment_path in attachment_paths:
-    mail.Attachments.Add(Source=attachment_path)
-
-# Send the email
-mail.Send()
+# Save the workbook
+wb.save('output.xlsx')
