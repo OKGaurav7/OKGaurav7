@@ -1,6 +1,91 @@
-    l1=["PX_DISC_MID","","USD","EUR","AUD","JPY","GBP"]
-    l2=["","","1",'=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")','=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")','=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")','=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")']
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
+from datetime import datetime
 
-    exchange=pd.DataFrame()
-    exchange["one"]=l1
-    exchange["two"]=l2
+def apply_styling(ws):
+    # Add styling logic here
+    pass
+
+def generate_output():
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel('master.xlsx')
+    Takara = pd.read_excel('Takara.xlsx')
+    prodman = pd.read_excel('prodman.xlsx')
+
+    # Merge data from prodman.xlsx and takara.xlsx based on 'obligorId' and 'currentObligorId'
+    abc_df = pd.merge(master, Takara, left_on='Counterparty RDM Id', right_on='externalId', how='left')
+    merged_output_df = pd.merge(abc_df, prodman, left_on='currentObligorRdmId', right_on='ObligorId', how='left')
+
+    # Define selected columns
+    selected_columns = ['Operation Type', 'Trade Date', 'Trade Price', 'Value Date', 'Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name','currentObligorRdmId', 'currentObligorFullName', 'CashScore']
+
+    # Reorder columns and select required columns
+    output_df = merged_output_df[selected_columns]
+    output_df = output_df.drop_duplicates()
+    new_columns = ['CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)', 'Days Elapsed']
+    custom_column_order = ['currentObligorRdmId','currentObligorFullName', 'CashScore','Operation Type', 'Trade Date', 'Trade Price','CBBT_PX_ASK', 'Economic Impact', 'LQA (Liq Score)','Value Date','Days Elapsed','Primary Original Quantity', 'Settlement Instrument Name', 'ISIN Primary Instrument Reference', 'Primary Instrument Long Name', 'SMO Trade Reference', 'Internal Status Narrative', 'Sales Person Name']
+
+    
+    for i, col in enumerate(new_columns, start=1):
+        output_df.insert(output_df.columns.get_loc('currentObligorRdmId') + i, col, '')
+
+    output_df['Trade Date'] = pd.to_datetime(output_df['Trade Date']).dt.strftime('%Y-%m-%d')
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date']).dt.strftime('%Y-%m-%d')
+
+    
+    output_df['Trade Price'] = output_df['Trade Price'].round(2)
+
+    # Calculate days elapsed
+    output_df['Value Date'] = pd.to_datetime(output_df['Value Date'])
+    today = datetime.today()
+    output_df['Days Elapsed'] = (today - output_df['Value Date']).dt.days - 1
+
+    # Fill NA for empty cells in new columns
+    output_df[['currentObligorRdmId', 'CashScore']] = output_df[['currentObligorRdmId', 'CashScore']].fillna('NA')
+
+    # Reorder columns based on custom_column_order
+    output_df = output_df[custom_column_order]
+
+    output_df['CBBT_PX_ASK'] = "=" + "BDP(" + output_df['ISIN Primary Instrument Reference'] + " Corp," + "G1" + ")"
+    output_df['LQA (Liq Score)' ]= "=" + "BDP(" + output_df['ISIN Primary Instrument Reference'] + " Corp," + '"LQA_LIQUIDITY_SCORE")'
+
+    # Define output filename
+    output_filename = 'output.xlsx'
+
+    # Write data to Excel file
+    with pd.ExcelWriter(output_filename) as writer:
+        # Append the new data to the output DataFrame
+        l1 = ["PX_DISC_MID", "", "USD", "EUR", "AUD", "JPY", "GBP"]
+        l2 = ["", "", 1, '=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")', '=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")']
+        new_data_df = pd.DataFrame([l1, l2], columns=output_df.columns)
+        output_df = pd.concat([output_df, new_data_df], axis=1)
+
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+
+        # Filter data where operation type is Buy
+        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
+
+        # Filter data where operation type is Sell
+        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+
+    # Open the Excel file
+    wb = load_workbook(output_filename)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]   
+    # Apply styling to each sheet
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        apply_styling(ws)
+
+        # Apply conditional formatting and adjust column width for each column
+        for column_name in output_df.columns:
+            column_letter = get_column_letter(ws.max_column)
+            ws.column_dimensions[column_letter].width = len(column_name) + 5
+
+    # Save the modified Excel file
+    wb.save(output_filename)
+
+generate_output()
