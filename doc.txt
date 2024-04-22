@@ -1,20 +1,34 @@
 import win32com.client as win32
 
 # Initialize Outlook application
-win32.Dispatch('Outlook.Application')
+outlook = win32.Dispatch('Outlook.Application')
 
 # Create a new email
 mail = outlook.CreateItem(0)
 
 # Set recipient, subject, and body of the email
 mail.To = 'aayush.tare@nomura.com'
-mail.Subject = 'Data from Sheets a, b, c'
-mail.Body = 'Please find the data from Sheets a, b, c attached.\n\nBest regards,\nYour Name'
+mail.Subject = 'Data from Sheets a, b'
+mail.Body = 'Please find the data from Sheets a, b attached.\n\nBest regards,\nYour Name'
 
-# Attach the sheets a, b, c from the output.xlsx file
+# Attach the sheets 'a' and 'b' from the output.xlsx file
 attachment_paths = [r'C:\Users\chauhang\Desktop\Python proj\output.xlsx']
 for attachment_path in attachment_paths:
-    mail.Attachments.Add(Source=attachment_path)
+    # Open the workbook
+    wb = win32.gencache.EnsureDispatch("Excel.Application").Workbooks.Open(attachment_path)
+
+    # Attach the sheets 'a' and 'b'
+    for sheet_name in ['a', 'b']:
+        try:
+            ws = wb.Sheets(sheet_name)
+            ws.Copy()  # Copy the sheet
+            new_wb = win32.GetActiveObject("Excel.Application").Workbooks(1)  # Get the new workbook
+            new_attachment_path = attachment_path.replace('.xlsx', f'_{sheet_name}.xlsx')  # Adjust attachment path
+            new_wb.SaveAs(new_attachment_path)  # Save the copied sheet as a new workbook
+            mail.Attachments.Add(Source=new_attachment_path)  # Attach the new workbook
+            new_wb.Close(False)  # Close the new workbook without saving changes
+        except Exception as e:
+            print(f"Error attaching sheet {sheet_name}: {e}")
 
 # Send the email
 mail.Send()
