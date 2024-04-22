@@ -1,39 +1,19 @@
-KeyError                                  Traceback (most recent call last)
-C:\ProgramData\Continuum\Anaconda\lib\site-packages\openpyxl\utils\cell.py in get_column_letter(idx)
-    110     try:
---> 111         return _STRING_COL_CACHE[idx]
-    112     except KeyError:
+import win32com.client as win32
 
-KeyError: 'A'
+# Initialize Outlook application
+outlook = win32.Dispatch('Outlook.Application')
 
-During handling of the above exception, another exception occurred:
+# Create a new email
+mail = outlook.CreateItem(0)
 
-ValueError                                Traceback (most recent call last)
-<ipython-input-10-cf2c6f7b91b1> in <module>()
-    355 
-    356     wb.save(output_filename)
---> 357 generate_output()
-    358 generate_new_excel()
+# Set recipient, subject, and body of the email
+mail.To = 'recipient@example.com'
+mail.Subject = 'Subject Here'
+mail.Body = 'Body Here'
 
-<ipython-input-10-cf2c6f7b91b1> in generate_output()
-    153     for sheet in wb.sheetnames:
-    154         ws = wb[sheet]
---> 155         apply_styling(ws)
-    156 
-    157         # Apply conditional formatting and adjust column width for 'CashScore'
+# Attach the Excel file
+attachment_path = r'path\to\your\file.xlsx'
+mail.Attachments.Add(Source=attachment_path)
 
-<ipython-input-10-cf2c6f7b91b1> in apply_styling(ws, header_fill_color, header_font_color, condition_fill_color, border_color)
-     27         cell.alignment=Alignment(horizontal="center")
-     28         if cell.value=='currentObligorRdmId':
----> 29             ws.column_dimensions[get_column_letter(cell.column)].width = 20
-     30 
-     31         elif cell.value=='currentObligorFullName':
-
-C:\ProgramData\Continuum\Anaconda\lib\site-packages\openpyxl\utils\cell.py in get_column_letter(idx)
-    111         return _STRING_COL_CACHE[idx]
-    112     except KeyError:
---> 113         raise ValueError("Invalid column index {0}".format(idx))
-    114 
-    115 
-
-ValueError: Invalid column index A
+# Send the email
+mail.Send()
