@@ -1,53 +1,20 @@
-import os
-import glob
-import pandas as pd
+# Define the columns to apply conditional formatting
+    columns_to_format = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+6', 'Vd+7', 'Vd>7']
 
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
+    # Loop through each column
+    for column_name in columns_to_format:
+        column_index = None
+    for cell in ws[1]:
+        if cell.value == column_name:
+            column_index = cell.column
+            break
     
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
-    
-    return latest_file
-
-def generate_output(master_path, takara_path, prodman_path):
-    # Function to generate the output Excel file
-
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
-
-    # Your existing code for merging and processing the data goes here
-
-    output_filename = 'output.xlsx'
-
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        output_df.to_excel(writer, index=False, sheet_name='All Data')
-
-        # Filter data where operation type is Buy
-        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
-
-        # Filter data where operation type is Sell
-        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
-
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
-
-def generate_new_excel():
-    # Function to generate the new Excel sheet
-
-    # Your existing code for generating new data and adding it to the Excel file goes here
-
-# Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-
-generate_output(master_path, takara_path, prodman_path)
-generate_new_excel()
+    if column_index:
+        # Set column width
+        ws.column_dimensions[get_column_letter(column_index)].width = 6.5
+        
+        # Apply conditional formatting
+        for row in ws.iter_rows(min_row=2):
+            for cell in row:
+                if cell.column == column_index and isinstance(cell.value, int) and cell.value > 0:
+                    cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
