@@ -1,5 +1,6 @@
 import os
 import glob
+import pandas as pd
 
 def get_latest_file(directory, extension):
     # Get the list of files with the specified extension in the directory
@@ -10,7 +11,43 @@ def get_latest_file(directory, extension):
     
     return latest_file
 
+def generate_output(master_path, takara_path, prodman_path):
+    # Function to generate the output Excel file
+
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel(master_path)
+    Takara = pd.read_excel(takara_path)
+    prodman = pd.read_excel(prodman_path)
+
+    # Your existing code for merging and processing the data goes here
+
+    output_filename = 'output.xlsx'
+
+    # Write data to Excel file
+    with pd.ExcelWriter(output_filename) as writer:
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+
+        # Filter data where operation type is Buy
+        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
+
+        # Filter data where operation type is Sell
+        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+
+    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
+
+def generate_new_excel():
+    # Function to generate the new Excel sheet
+
+    # Your existing code for generating new data and adding it to the Excel file goes here
+
 # Example usage:
 directory = '/path/to/directory'
 extension = 'xlsx'
-latest_master_path = get_latest_file(directory, extension)
+master_path = get_latest_file(directory, extension)
+takara_path = '/path/to/Takara.xlsx'
+prodman_path = '/path/to/prodman.xlsx'
+
+generate_output(master_path, takara_path, prodman_path)
+generate_new_excel()
