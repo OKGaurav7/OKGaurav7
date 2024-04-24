@@ -1,1 +1,19 @@
-output_df['Primary Original Quantity'] = output_df['Primary Original Quantity'].apply(lambda x: "{:,}".format(x))
+Sub Macro18()
+'
+' Macro18 Macro
+'
+
+'
+    Range("T1:U5").Select
+    Selection.Copy
+    Sheets("Buy Data").Select
+    ActiveWindow.SmallScroll ToRight:=8
+    Range("T1").Select
+    ActiveSheet.Paste
+    Sheets("Sell Data").Select
+    ActiveWindow.SmallScroll ToRight:=7
+    Range("T1").Select
+    ActiveSheet.Paste
+    Application.CutCopyMode = False
+    Sheets("All Data").Select
+End Sub
