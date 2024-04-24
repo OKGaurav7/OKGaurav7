@@ -1,16 +1,14 @@
-import os
-import glob
 import pandas as pd
+import openpyxl
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+from datetime import datetime
 import win32com.client as win32
 
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
-    
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
-    
-    return latest_file
+def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000"):
+    # Function to apply styling to the worksheet
+    # Your existing styling code goes here
 
 def generate_output(master_path, takara_path, prodman_path):
     # Function to generate the output Excel file
@@ -38,26 +36,11 @@ def generate_output(master_path, takara_path, prodman_path):
 
     # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
 
-    # Run VBA code
-    run_vba_code(output_filename)
-
-def run_vba_code(filename):
-    # Create a new instance of Excel
-    xl = win32.Dispatch('Excel.Application')
-    xl.Visible = False  # Hide Excel window
-    xl.DisplayAlerts = False  # Disable alerts
-
-    # Open the workbook
-    wb = xl.Workbooks.Open(os.path.abspath(filename))
-
-    # Run VBA code
-    xl.Application.Run("Macro1")  # Replace "Macro1" with the name of your VBA macro
-
-    # Save and close the workbook
+    # Execute macro ll after the original code ends
+    xl = win32.gencache.EnsureDispatch('Excel.Application')
+    wb = xl.Workbooks.Open(Filename=output_filename)
+    xl.Application.Run("PERSONAL.XLSB!ll")
     wb.Save()
-    wb.Close()
-
-    # Quit Excel
     xl.Quit()
 
 def generate_new_excel():
@@ -66,9 +49,7 @@ def generate_new_excel():
     # Your existing code for generating new data and adding it to the Excel file goes here
 
 # Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
+master_path = '/path/to/master.xlsx'
 takara_path = '/path/to/Takara.xlsx'
 prodman_path = '/path/to/prodman.xlsx'
 
