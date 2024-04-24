@@ -17,3 +17,35 @@ Sub Macro18()
     Application.CutCopyMode = False
     Sheets("All Data").Select
 End Sub
+
+
+
+Sub Macro18()
+    Dim lastRow As Long
+    Dim ws As Worksheet
+
+    ' Loop through each sheet
+    For Each ws In ThisWorkbook.Sheets
+        ' Find the last used row in column G
+        lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
+
+        ' Copy the range G2:G[lastRow]
+        ws.Range("G2:G" & lastRow).Copy
+
+        ' Paste into the respective sheet
+        Select Case ws.Name
+            Case "Buy Data"
+                ' Paste into the "Buy Data" sheet starting from T1
+                ws.Range("T1").PasteSpecial Paste:=xlPasteValues
+            Case "Sell Data"
+                ' Paste into the "Sell Data" sheet starting from T1
+                ws.Range("T1").PasteSpecial Paste:=xlPasteValues
+        End Select
+    Next ws
+
+    ' Clear the clipboard
+    Application.CutCopyMode = False
+
+    ' Return to the "All Data" sheet
+    Sheets("All Data").Activate
+End Sub
