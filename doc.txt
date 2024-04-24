@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-import xlwings as xw
+import win32com.client as win32
 
 def get_latest_file(directory, extension):
     # Get the list of files with the specified extension in the directory
@@ -36,41 +36,34 @@ def generate_output(master_path, takara_path, prodman_path):
         sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
         sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
 
-    # Run the VBA script on the output Excel file
-    run_vba_script(output_filename, vba_script)
+    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
+
+    # Run VBA code
+    run_vba_code(output_filename)
+
+def run_vba_code(filename):
+    # Create a new instance of Excel
+    xl = win32.Dispatch('Excel.Application')
+    xl.Visible = False  # Hide Excel window
+    xl.DisplayAlerts = False  # Disable alerts
+
+    # Open the workbook
+    wb = xl.Workbooks.Open(os.path.abspath(filename))
+
+    # Run VBA code
+    xl.Application.Run("Macro1")  # Replace "Macro1" with the name of your VBA macro
+
+    # Save and close the workbook
+    wb.Save()
+    wb.Close()
+
+    # Quit Excel
+    xl.Quit()
 
 def generate_new_excel():
     # Function to generate the new Excel sheet
 
     # Your existing code for generating new data and adding it to the Excel file goes here
-
-def run_vba_script(file_path, vba_script):
-    # Connect to the Excel application
-    app = xw.App()
-
-    # Open the Excel file
-    wb = app.books.open(file_path)
-
-    # Run the VBA script
-    wb.app.execute_vba(vba_script)
-
-    # Save and close the Excel file
-    wb.save()
-    wb.close()
-
-    # Quit the Excel application
-    app.quit()
-
-# Example VBA script to activate the "G" column and select all values from row 2 onwards
-vba_script = """
-Sub ActivateColumnG()
-    Dim ws As Worksheet
-    For Each ws In Worksheets
-        ws.Columns("G:G").Activate
-        ws.Range("G2", ws.Range("G2").End(xlDown)).Select
-    Next ws
-End Sub
-"""
 
 # Example usage:
 directory = '/path/to/directory'
