@@ -7,42 +7,66 @@ workbook_path = os.getcwd() + '\\output.xlsx'
 excel = client.Dispatch('Excel.Application')
 wb = excel.Workbooks.Open(workbook_path)
 
-# Define the sheet names and their corresponding counts
-sheet_names_counts = [('Buy Data', buy_data_count), ('Sell Data', sell_data_count), ('New Data', new_data_count)]
-
-attachments = []
-
-for sheet_name, data_count in sheet_names_counts:
+# Save each sheet as a separate Excel file
+sheets_to_attach = ['Buy Data', 'Sell Data', 'New Data']
+attached_files = []
+for sheet_name in sheets_to_attach:
     sheet = wb.Sheets[sheet_name]
-    copy_range = sheet.Range('A1:R' + str(data_count + 1))
+    sheet.Copy()
+    new_wb = excel.ActiveWorkbook
+    new_file_path = os.path.join(os.getcwd(), f'{sheet_name}.xlsx')
+    new_wb.SaveAs(new_file_path)
+    new_wb.Close()
+    attached_files.append(new_file_path)
+
+# Copy images from each sheet and save them
+image_paths = []
+for i, sheet_name in enumerate(sheets_to_attach):
+    copy_range = sheet.Range('A1:R100')  # Adjust range as needed
     copy_range.CopyPicture(Appearance=1, Format=2)
-    ImageGrab.grabclipboard().save(f'paste_{sheet_name}.png')
-    image_path = pathlib.Path(f'paste_{sheet_name}.png')
-    attachments.append(str(image_path.absolute()))
+    ImageGrab.grabclipboard().save(f'paste{i}.png')
+    image_paths.append(pathlib.Path(f'paste{i}.png'))
 
-data_attachments = []
+# Convert paths to absolute paths
+attached_file_absolute_paths = [str(pathlib.Path(file).absolute()) for file in attached_files]
+image_absolute_paths = [str(path.absolute()) for path in image_paths]
 
-for attachment in attachments:
-    data_attachment = message.Attachments.Add(attachment)
-    data_attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", f"{attachment}-img")
-    data_attachments.append(data_attachment)
+outlook = client.Dispatch('Outlook.Application')
+message = outlook.CreateItem(0)
+message.To = "rohit.patil@nomura.com"
+message.Subject = "Fails Update 12-Apr-2024"
 
+# Attach Excel files
+for file_path in attached_file_absolute_paths:
+    message.Attachments.Add(file_path)
+
+# Attach images
+for i, image_path in enumerate(image_absolute_paths):
+    image = message.Attachments.Add(image_path)
+    image.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", f"paste{i}-img")
+
+# Email body
 html_body = """
   <div>
   <p>Hi Team,</p> 
   <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
   </div><br>
-"""
-
-for sheet_name, _ in sheet_names_counts:
-    html_body += f"""
-    <div>
-    <p>Failed trades in {sheet_name} (with current exposure). </p><br>
-    <img src="cid:paste_{sheet_name}.png-img" width=80%>
-    </div><br>
-    """
-
-html_body += """
+      <div>
+    <img src="cid:paste2-img" width=80%>
+      </div><br>
+      
+      
+      
+      <div>
+      <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
+    <img src="cid:paste0-img" width=250%>
+      </div><br>
+      
+  <div>
+  <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
+    <img src="cid:paste1-img" width=250%>
+  </div><br>
+  <br>
   <br>
   <p>Thanks,</p>
   <p>Rohit</p>
