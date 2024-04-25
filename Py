@@ -56,3 +56,23 @@ Sub idk()
   '  Range("H20").Activate
     Sheets("All Data").Select
 End Sub
+
+
+
+
+Sheets("All Data").Select
+
+Dim lastRowH As Long
+Dim lastRowI As Long
+
+' Find the last row with data in column H
+lastRowH = Cells(Rows.Count, "H").End(xlUp).Row
+
+' Select column H and convert data to integers
+Range("H2:H" & lastRowH).Value = Evaluate("IFERROR(INT(H2:H" & lastRowH & "), H2:H" & lastRowH & ")")
+
+' Find the last row with data in column I
+lastRowI = Cells(Rows.Count, "I").End(xlUp).Row
+
+' Select column I and convert data to integers
+Range("I2:I" & lastRowI).Value = Evaluate("IFERROR(INT(I2:I" & lastRowI & "), I2:I" & lastRowI & ")")
