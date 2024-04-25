@@ -1,2 +1,67 @@
-dataframe = dataframe.applymap(lambda x: x.encode('unicode_escape').
-                 decode('utf-8') if isinstance(x, str) else x)
+import win32com.client as client
+
+workbook_path=os.getcwd()+ '\\output.xlsx'
+excel=client.Dispatch('Excel.Application')
+wb=excel.Workbooks.Open(workbook_path)
+sheet0=wb.Sheets['Buy Data']
+copyrange=sheet0.Range('A1'+":"+"R"+str(buy_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste0.png')
+sheet1=wb.Sheets['Sell Data']
+copyrange=sheet1.Range('A1'+ ':' + 'R'+ str(sell_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste1.png')
+sheet2=wb.Sheets['New Data']
+copyrange=sheet2.Range('A1'+":"+"K"+str(new_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste2.png')
+data0_path=pathlib.Path('paste0.png')
+data1_path=pathlib.Path('paste1.png')
+data2_path=pathlib.Path('paste2.png')
+
+data0_absolute=str(data0_path.absolute())
+data1_absolute=str(data1_path.absolute())
+data2_absolute=str(data2_path.absolute())
+
+outlook=client.Dispatch('Outlook.Application')
+message=outlook.CreateItem(0)
+message.To="rohit.patil@nomura.com"
+message.Subject="Fails Update 12-Apr-2024"
+
+image0=message.Attachments.Add(data0_absolute)
+image1=message.Attachments.Add(data1_absolute)
+image2=message.Attachments.Add(data2_absolute)
+
+html_body="""
+  <div>
+  <p>Hi Team,</p> 
+  <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
+  </div><br>
+      <div>
+    <img src="cid:paste2-img" width=80%>
+      </div><br>
+      
+      
+      
+      <div>
+      <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
+    <img src="cid:paste0-img" width=250%>
+      </div><br>
+      
+  <div>
+  <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
+    <img src="cid:paste1-img" width=250%>
+  </div><br>
+  <br>
+  <br>
+  <p>Thanks,</p>
+  <p>Rohit</p>
+
+"""
+
+image0.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste0-img")
+image1.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste1-img")
+image2.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste2-img")
+
+message.HTMLBody=html_body
+message.Display()
