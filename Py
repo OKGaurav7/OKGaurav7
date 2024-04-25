@@ -1,80 +1,52 @@
 import win32com.client as client
 import os
+import pathlib
+from PIL import ImageGrab
 
-# Define the path to the Excel workbook
 workbook_path = os.getcwd() + '\\output.xlsx'
-
-# Create an instance of Excel application
 excel = client.Dispatch('Excel.Application')
-
-# Open the workbook
 wb = excel.Workbooks.Open(workbook_path)
 
-# Define the ranges to be attached for each sheet
-ranges_to_attach = {
-    'Buy Data': 'A1:R100',  # Example range: A1 to R100
-    'Sell Data': 'A1:R100',
-    'New Data': 'A1:K100'
-}
+# Define the sheet names and their corresponding counts
+sheet_names_counts = [('Buy Data', buy_data_count), ('Sell Data', sell_data_count), ('New Data', new_data_count)]
 
-# Create a list to store the paths of attached Excel files
-attached_files = []
+attachments = []
 
-# Loop through the sheets and their defined ranges
-for sheet_name, range_str in ranges_to_attach.items():
-    # Copy the specified range to a new workbook
-    new_wb = excel.Workbooks.Add()
-    sheet = wb.Sheets(sheet_name)
-    sheet.Range(range_str).Copy()
-    new_wb.Sheets(1).Paste()
-    new_file_path = os.path.join(os.getcwd(), f'{sheet_name}_range.xlsx')
-    new_wb.SaveAs(new_file_path)
-    new_wb.Close()
-    attached_files.append(new_file_path)
+for sheet_name, data_count in sheet_names_counts:
+    sheet = wb.Sheets[sheet_name]
+    copy_range = sheet.Range('A1:R' + str(data_count + 1))
+    copy_range.CopyPicture(Appearance=1, Format=2)
+    ImageGrab.grabclipboard().save(f'paste_{sheet_name}.png')
+    image_path = pathlib.Path(f'paste_{sheet_name}.png')
+    attachments.append(str(image_path.absolute()))
 
-# Close the original workbook
-wb.Close()
+data_attachments = []
 
-# Create an instance of Outlook application
-outlook = client.Dispatch('Outlook.Application')
-message = outlook.CreateItem(0)
-message.To = "rohit.patil@nomura.com"
-message.Subject = "Fails Update 12-Apr-2024"
+for attachment in attachments:
+    data_attachment = message.Attachments.Add(attachment)
+    data_attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", f"{attachment}-img")
+    data_attachments.append(data_attachment)
 
-# Attach the Excel files
-for file_path in attached_files:
-    attachment = message.Attachments.Add(file_path)
-
-# Construct the HTML body of the email (unchanged)
 html_body = """
   <div>
   <p>Hi Team,</p> 
   <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
   </div><br>
-      <div>
-    <img src="cid:paste2-img" width=80%>
-      </div><br>
-      
-      
-      
-      <div>
-      <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
-    <img src="cid:paste0-img" width=250%>
-      </div><br>
-      
-  <div>
-  <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
-    <img src="cid:paste1-img" width=250%>
-  </div><br>
-  <br>
+"""
+
+for sheet_name, _ in sheet_names_counts:
+    html_body += f"""
+    <div>
+    <p>Failed trades in {sheet_name} (with current exposure). </p><br>
+    <img src="cid:paste_{sheet_name}.png-img" width=80%>
+    </div><br>
+    """
+
+html_body += """
   <br>
   <p>Thanks,</p>
   <p>Rohit</p>
-
 """
 
-# Set the HTML body of the email message
 message.HTMLBody = html_body
-
-# Display the composed email message
 message.Display()
