@@ -76,3 +76,77 @@ lastRowI = Cells(Rows.Count, "I").End(xlUp).Row
 
 ' Select column I and convert data to integers
 Range("I2:I" & lastRowI).Value = Evaluate("IFERROR(INT(I2:I" & lastRowI & "), I2:I" & lastRowI & ")")
+
+
+
+import os
+import glob
+import pandas as pd
+
+def get_latest_file(directory, extension):
+    # Get the list of files with the specified extension in the directory
+    files = glob.glob(os.path.join(directory, f'*.{extension}'))
+    
+    # Sort files by modification time
+    latest_file = max(files, key=os.path.getmtime)
+    
+    return latest_file
+
+def generate_output(master_path, takara_path, prodman_path):
+    # Function to generate the output Excel file
+
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel(master_path)
+    Takara = pd.read_excel(takara_path)
+    prodman = pd.read_excel(prodman_path)
+
+    # Your existing code for merging and processing the data goes here
+
+    output_filename = 'output.xlsx'
+
+    # Write data to Excel file
+    with pd.ExcelWriter(output_filename) as writer:
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+
+        # Filter data where operation type is Buy
+        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
+
+        # Filter data where operation type is Sell
+        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+
+    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
+
+    # Count rows for each sheet
+    all_data_rows = len(output_df)
+    buy_data_rows = len(buy_df)
+    sell_data_rows = len(sell_df)
+
+    return all_data_rows, buy_data_rows, sell_data_rows
+
+def generate_new_excel():
+    # Function to generate the new Excel sheet
+
+    # Your existing code for generating new data and adding it to the Excel file goes here
+
+    # Count rows for each sheet
+    # Assuming you have the DataFrame 'new_excel_df' containing new data
+    new_data_rows = len(new_excel_df)
+
+    return new_data_rows
+
+# Example usage:
+directory = '/path/to/directory'
+extension = 'xlsx'
+master_path = get_latest_file(directory, extension)
+takara_path = '/path/to/Takara.xlsx'
+prodman_path = '/path/to/prodman.xlsx'
+
+all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
+new_data_count = generate_new_excel()
+
+print("All Data rows:", all_data_count)
+print("Buy Data rows:", buy_data_count)
+print("Sell Data rows:", sell_data_count)
+print("New Data rows:", new_data_count)
