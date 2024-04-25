@@ -1,25 +1,2 @@
-import win32com.client
-
-def run_vba_macro(excel_file, macro_name):
-    # Create an instance of Excel application
-    excel_app = win32com.client.Dispatch("Excel.Application")
-    
-    # Open the Excel file
-    wb = excel_app.Workbooks.Open(excel_file)
-    
-    # Run the VBA macro
-    excel_app.Application.Run(macro_name)
-    
-    # Save and close the workbook
-    wb.Save()
-    wb.Close()
-    
-    # Quit Excel application
-    excel_app.Quit()
-
-# Provide the path to the output Excel file and the name of the VBA macro
-output_excel_file = r'\\asiapac.nom\home\userdata\MUM\HomeDrive24\chauhang\Desktop\new\output.xlsx'
-vba_macro_name = 'PERSONAL.xlsb!idk'
-
-# Run the VBA macro on the output Excel file
-run_vba_macro(output_excel_file, vba_macro_name)
+dataframe = dataframe.applymap(lambda x: x.encode('unicode_escape').
+                 decode('utf-8') if isinstance(x, str) else x)
