@@ -1,51 +1,58 @@
-Sub Macro18()
+Sub idk()
 '
-' Macro18 Macro
+' idk Macro
 '
-
+' Keyboard Shortcut: Ctrl+Shift+Q
 '
     Range("T1:U5").Select
     Selection.Copy
     Sheets("Buy Data").Select
-    ActiveWindow.SmallScroll ToRight:=8
     Range("T1").Select
     ActiveSheet.Paste
     Sheets("Sell Data").Select
-    ActiveWindow.SmallScroll ToRight:=7
     Range("T1").Select
     ActiveSheet.Paste
-    Application.CutCopyMode = False
     Sheets("All Data").Select
-End Sub
-
-
-
-Sub Macro18()
-    Dim lastRow As Long
-    Dim ws As Worksheet
-
-    ' Loop through each sheet
-    For Each ws In ThisWorkbook.Sheets
-        ' Find the last used row in column G
-        lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
-
-        ' Copy the range G2:G[lastRow]
-        ws.Range("G2:G" & lastRow).Copy
-
-        ' Paste into the respective sheet
-        Select Case ws.Name
-            Case "Buy Data"
-                ' Paste into the "Buy Data" sheet starting from T1
-                ws.Range("T1").PasteSpecial Paste:=xlPasteValues
-            Case "Sell Data"
-                ' Paste into the "Sell Data" sheet starting from T1
-                ws.Range("T1").PasteSpecial Paste:=xlPasteValues
-        End Select
-    Next ws
-
-    ' Clear the clipboard
     Application.CutCopyMode = False
-
-    ' Return to the "All Data" sheet
-    Sheets("All Data").Activate
+    Range("G2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("G2:G39").Activate
+'    Range("G39").Activate
+   
+    Range("I2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("I2:I39").Activate
+   ' Range("I39").Activate
+    
+    Range("H2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("H2:H39").Activate
+   ' Range("H39").Activate
+    Sheets("Buy Data").Select
+    Range("G2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("G2:G39").Activate
+    
+    Range("I2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("I2:I39").Activate
+    
+    Range("H2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("H2:H20").Activate
+    
+   ' Range("H20").Activate
+    Sheets("Sell Data").Select
+    Range("G2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("G2:G39").Activate
+    Range("I2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("I2:I39").Activate
+    
+    Range("H2").Select
+    Range(Selection, Selection.End(xlDown)).Select
+    Range("H2:H20").Activate
+  '  Range("H20").Activate
+    Sheets("All Data").Select
 End Sub
