@@ -1,66 +1,67 @@
-import os
-import glob
-import pandas as pd
+import win32com.client as client
 
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
-    
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
-    
-    return latest_file
+workbook_path=os.getcwd()+ '\\output.xlsx'
+excel=client.Dispatch('Excel.Application')
+wb=excel.Workbooks.Open(workbook_path)
+sheet0=wb.Sheets['Buy Data']
+copyrange=sheet0.Range('A1'+":"+"R"+str(buy_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste0.png')
+sheet1=wb.Sheets['Sell Data']
+copyrange=sheet1.Range('A1'+ ':' + 'R'+ str(sell_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste1.png')
+sheet2=wb.Sheets['Summary']
+copyrange=sheet2.Range('A1'+":"+"K"+str(new_data_count+1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste2.png')
+data0_path=pathlib.Path('paste0.png')
+data1_path=pathlib.Path('paste1.png')
+data2_path=pathlib.Path('paste2.png') 
 
-def generate_output(master_path, takara_path, prodman_path):
-    # Function to generate the output Excel file
+data0_absolute=str(data0_path.absolute())
+data1_absolute=str(data1_path.absolute())
+data2_absolute=str(data2_path.absolute())
 
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
+outlook=client.Dispatch('Outlook.Application')
+message=outlook.CreateItem(0)
+message.To="rohit.patil@nomura.com"
+message.Subject="Fails Update 12-Apr-2024"
 
-    # Your existing code for merging and processing the data goes here
+image0=message.Attachments.Add(data0_absolute)
+image1=message.Attachments.Add(data1_absolute)
+image2=message.Attachments.Add(data2_absolute)
 
-    output_filename = 'output.xlsx'
+html_body="""
+  <div>
+  <p>Hi Team,</p> 
+  <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
+  </div><br>
+      <div>
+    <img src="cid:paste2-img" width=80%>
+      </div><br>
+      
+      
+      
+      <div>
+      <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
+    <img src="cid:paste0-img" width=250%>
+      </div><br>
+      
+  <div>
+  <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
+    <img src="cid:paste1-img" width=250%>
+  </div><br>
+  <br>
+  <br>
+  <p>Thanks,</p>
+  <p>Rohit</p>
 
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        # Create a new sheet for master data
-        master.to_excel(writer, index=False, sheet_name='Master Data')
+"""
 
-        # Your existing code for other sheets goes here
-
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
-
-    # Count rows for each sheet
-    all_data_rows = len(output_df)
-    buy_data_rows = len(buy_df)
-    sell_data_rows = len(sell_df)
-
-    return all_data_rows, buy_data_rows, sell_data_rows
-
-def generate_new_excel():
-    # Function to generate the new Excel sheet
-
-    # Your existing code for generating new data and adding it to the Excel file goes here
-
-    # Count rows for each sheet
-    # Assuming you have the DataFrame 'new_excel_df' containing new data
-    new_data_rows = len(new_excel_df)
-
-    return new_data_rows
-
-# Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-
-all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
-new_data_count = generate_new_excel()
-
-print("All Data rows:", all_data_count)
-print("Buy Data rows:", buy_data_count)
-print("Sell Data rows:", sell_data_count)
-print("New Data rows:", new_data_count)
+image0.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste0-img")
+image1.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste1-img")
+image2.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste2-img")
+output_excel=message.Attachments.Add(workbook_path)
+message.HTMLBody=html_body
+message.Display()
