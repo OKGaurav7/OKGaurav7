@@ -1,152 +1,25 @@
-Sub idk()
-'
-' idk Macro
-'
-' Keyboard Shortcut: Ctrl+Shift+Q
-'
-    Range("T1:U5").Select
-    Selection.Copy
-    Sheets("Buy Data").Select
-    Range("T1").Select
-    ActiveSheet.Paste
-    Sheets("Sell Data").Select
-    Range("T1").Select
-    ActiveSheet.Paste
-    Sheets("All Data").Select
-    Application.CutCopyMode = False
-    Range("G2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("G2:G39").Activate
-'    Range("G39").Activate
-   
-    Range("I2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("I2:I39").Activate
-   ' Range("I39").Activate
+import win32com.client
+
+def run_vba_macro(excel_file, macro_name):
+    # Create an instance of Excel application
+    excel_app = win32com.client.Dispatch("Excel.Application")
     
-    Range("H2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("H2:H39").Activate
-   ' Range("H39").Activate
-    Sheets("Buy Data").Select
-    Range("G2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("G2:G39").Activate
+    # Open the Excel file
+    wb = excel_app.Workbooks.Open(excel_file)
     
-    Range("I2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("I2:I39").Activate
+    # Run the VBA macro
+    excel_app.Application.Run(macro_name)
     
-    Range("H2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("H2:H20").Activate
+    # Save and close the workbook
+    wb.Save()
+    wb.Close()
     
-   ' Range("H20").Activate
-    Sheets("Sell Data").Select
-    Range("G2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("G2:G39").Activate
-    Range("I2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("I2:I39").Activate
-    
-    Range("H2").Select
-    Range(Selection, Selection.End(xlDown)).Select
-    Range("H2:H20").Activate
-  '  Range("H20").Activate
-    Sheets("All Data").Select
-End Sub
+    # Quit Excel application
+    excel_app.Quit()
 
+# Provide the path to the output Excel file and the name of the VBA macro
+output_excel_file = r'\\asiapac.nom\home\userdata\MUM\HomeDrive24\chauhang\Desktop\new\output.xlsx'
+vba_macro_name = 'PERSONAL.xlsb!idk'
 
-
-
-Sheets("All Data").Select
-
-Dim lastRowH As Long
-Dim lastRowI As Long
-
-' Find the last row with data in column H
-lastRowH = Cells(Rows.Count, "H").End(xlUp).Row
-
-' Select column H and convert data to integers
-Range("H2:H" & lastRowH).Value = Evaluate("IFERROR(INT(H2:H" & lastRowH & "), H2:H" & lastRowH & ")")
-
-' Find the last row with data in column I
-lastRowI = Cells(Rows.Count, "I").End(xlUp).Row
-
-' Select column I and convert data to integers
-Range("I2:I" & lastRowI).Value = Evaluate("IFERROR(INT(I2:I" & lastRowI & "), I2:I" & lastRowI & ")")
-
-
-
-import os
-import glob
-import pandas as pd
-
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
-    
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
-    
-    return latest_file
-
-def generate_output(master_path, takara_path, prodman_path):
-    # Function to generate the output Excel file
-
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
-
-    # Your existing code for merging and processing the data goes here
-
-    output_filename = 'output.xlsx'
-
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        output_df.to_excel(writer, index=False, sheet_name='All Data')
-
-        # Filter data where operation type is Buy
-        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
-
-        # Filter data where operation type is Sell
-        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
-
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
-
-    # Count rows for each sheet
-    all_data_rows = len(output_df)
-    buy_data_rows = len(buy_df)
-    sell_data_rows = len(sell_df)
-
-    return all_data_rows, buy_data_rows, sell_data_rows
-
-def generate_new_excel():
-    # Function to generate the new Excel sheet
-
-    # Your existing code for generating new data and adding it to the Excel file goes here
-
-    # Count rows for each sheet
-    # Assuming you have the DataFrame 'new_excel_df' containing new data
-    new_data_rows = len(new_excel_df)
-
-    return new_data_rows
-
-# Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-
-all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
-new_data_count = generate_new_excel()
-
-print("All Data rows:", all_data_count)
-print("Buy Data rows:", buy_data_count)
-print("Sell Data rows:", sell_data_count)
-print("New Data rows:", new_data_count)
+# Run the VBA macro on the output Excel file
+run_vba_macro(output_excel_file, vba_macro_name)
