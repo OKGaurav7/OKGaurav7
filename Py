@@ -45,15 +45,15 @@ html_body = """
   <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
   </div><br>
   <div>
-    <img src="data:image/png;base64,{0}" width=80%>
+    <img src="data:image/png;base64,{0}" style="width: 80%;">
   </div><br>
   <div>
     <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
-    <img src="data:image/png;base64,{1}" width=250%>
+    <img src="data:image/png;base64,{1}" style="width: 100%;">
   </div><br>
   <div>
     <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
-    <img src="data:image/png;base64,{2}" width=250%>
+    <img src="data:image/png;base64,{2}" style="width: 100%;">
   </div><br>
   <br>
   <br>
