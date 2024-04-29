@@ -1,67 +1,92 @@
+import win32com.client as client
 import os
-import glob
-import pandas as pd
+import pathlib
+from PIL import ImageGrab
 
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
-    
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
-    
-    return latest_file
+# Get the current working directory
+cwd = os.getcwd()
 
-def generate_output(master_path, takara_path, prodman_path, output_path):
-    # Function to generate the output Excel file
+# Define the path to the output Excel file
+workbook_path = os.path.join(cwd, 'output.xlsx')
 
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
+# Open Excel application
+excel = client.Dispatch('Excel.Application')
+wb = excel.Workbooks.Open(workbook_path)
 
-    # Your existing code for merging and processing the data goes here
+# Copy data from different sheets and save them as images
+sheet0 = wb.Sheets['Buy Data']
+buy_data_count = 10  # Example value, replace with your actual count
+copyrange = sheet0.Range('A1:R' + str(buy_data_count + 1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste0.png')
 
-    output_filename = output_path  # Specify the output file path
+sheet1 = wb.Sheets['Sell Data']
+sell_data_count = 10  # Example value, replace with your actual count
+copyrange = sheet1.Range('A1:R' + str(sell_data_count + 1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste1.png')
 
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        # Create a new sheet for master data without styling or new columns
-        master.to_excel(writer, index=False, sheet_name='Master Data', header=False)
+sheet2 = wb.Sheets['New Data']
+new_data_count = 10  # Example value, replace with your actual count
+copyrange = sheet2.Range('A1:K' + str(new_data_count + 1))
+copyrange.CopyPicture(Appearance=1, Format=2)
+ImageGrab.grabclipboard().save('paste2.png')
 
-        # Your existing code for other sheets goes here
+# Define paths to image files
+data0_path = pathlib.Path('paste0.png')
+data1_path = pathlib.Path('paste1.png')
+data2_path = pathlib.Path('paste2.png')
 
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
+# Get absolute paths to image files
+data0_absolute = str(data0_path.absolute())
+data1_absolute = str(data1_path.absolute())
+data2_absolute = str(data2_path.absolute())
 
-    # Count rows for each sheet
-    all_data_rows = len(output_df)
-    buy_data_rows = len(buy_df)
-    sell_data_rows = len(sell_df)
+# Create Outlook application instance
+outlook = client.Dispatch('Outlook.Application')
+message = outlook.CreateItem(0)
+message.To = "rohit.patil@nomura.com"
+message.Subject = "Fails Update 12-Apr-2024"
 
-    return all_data_rows, buy_data_rows, sell_data_rows
+# Attach images to the email
+image0 = message.Attachments.Add(data0_absolute)
+image1 = message.Attachments.Add(data1_absolute)
+image2 = message.Attachments.Add(data2_absolute)
 
-def generate_new_excel():
-    # Function to generate the new Excel sheet
+# Define HTML body of the email
+html_body = """
+  <div>
+  <p>Hi Team,</p> 
+  <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
+  </div><br>
+      <div>
+    <img src="cid:paste2-img" width=80%>
+      </div><br>
+      
+      <div>
+      <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
+    <img src="cid:paste0-img" width=250%>
+      </div><br>
+      
+  <div>
+  <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
+    <img src="cid:paste1-img" width=250%>
+  </div><br>
+  <br>
+  <br>
+  <p>Thanks,</p>
+  <p>Rohit</p>
+"""
 
-    # Your existing code for generating new data and adding it to the Excel file goes here
+# Set image IDs in the email
+image0.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste0-img")
+image1.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste1-img")
+image2.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001F", "paste2-img")
 
-    # Count rows for each sheet
-    # Assuming you have the DataFrame 'new_excel_df' containing new data
-    new_data_rows = len(new_excel_df)
+# Attach the Excel file to the email with the specified display name
+output_excel = message.Attachments.Add(workbook_path)
+output_excel.DisplayName = "Daily Fails AO"
 
-    return new_data_rows
-
-# Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-output_path = '/desired/output/path/output.xlsx'  # Specify the desired output file path
-
-all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path, output_path)
-new_data_count = generate_new_excel()
-
-print("All Data rows:", all_data_count)
-print("Buy Data rows:", buy_data_count)
-print("Sell Data rows:", sell_data_count)
-print("New Data rows:", new_data_count)
+# Set HTML body and display the email
+message.HTMLBody = html_body
+message.Display()
