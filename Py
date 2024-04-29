@@ -11,7 +11,7 @@ def get_latest_file(directory, extension):
     
     return latest_file
 
-def generate_output(master_path, takara_path, prodman_path):
+def generate_output(master_path, takara_path, prodman_path, output_path):
     # Function to generate the output Excel file
 
     # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
@@ -21,7 +21,7 @@ def generate_output(master_path, takara_path, prodman_path):
 
     # Your existing code for merging and processing the data goes here
 
-    output_filename = 'output.xlsx'
+    output_filename = output_path  # Specify the output file path
 
     # Write data to Excel file
     with pd.ExcelWriter(output_filename) as writer:
@@ -56,8 +56,9 @@ extension = 'xlsx'
 master_path = get_latest_file(directory, extension)
 takara_path = '/path/to/Takara.xlsx'
 prodman_path = '/path/to/prodman.xlsx'
+output_path = '/desired/output/path/output.xlsx'  # Specify the desired output file path
 
-all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
+all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path, output_path)
 new_data_count = generate_new_excel()
 
 print("All Data rows:", all_data_count)
