@@ -1,62 +1,19 @@
-Sub ReplaceFormula()
-    Dim ws As Worksheet
-    Dim lastRow As Long, i As Long
-    Dim nonNumeric As Boolean
-    
-    ' Specify the worksheet
-    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
-    
-    ' Find the last row with data in column A
-    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
-    
-    ' Loop through each row
-    For i = 1 To lastRow
-        nonNumeric = False ' Reset flag for each row
-        
-        ' Check if all data in the row is non-numerical
-        For Each cell In ws.Rows(i).Cells
-            If Not IsNumeric(cell.Value) Then
-                nonNumeric = True
-                Exit For
-            End If
-        Next cell
-        
-        ' If all data in the row is non-numerical, replace formula in cell $G$1
-        If nonNumeric Then
-            ws.Range("$G$1").Formula = "=IFERROR(AVERAGE(A" & i & ":F" & i & "), ""OK"")"
-            Exit For ' Assuming you want to stop after the first occurrence, remove this line if not
-        End If
-    Next i
-End Sub
-
-
-
-
-
-
-Sub ReplaceFormulaIfNonNumeric()
-    Dim ws As Worksheet
+Sub CheckNumericValues()
     Dim rng As Range
     Dim cell As Range
-    Dim col As Integer
     
-    ' Specify the column number to check
-    col = 7 ' Change this to the column number you want to check (e.g., column G is 7)
+    ' Specify the column range you want to check
+    Set rng = Range("A:A")  ' Change "A:A" to your desired column range
     
-    ' Set the worksheet
-    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
-    
-    ' Set the range to the entire column
-    Set rng = ws.Columns(col)
-    
-    ' Loop through each cell in the column
+    ' Loop through each cell in the column range
     For Each cell In rng
-        ' Check if the cell contains non-numeric data
-        If Not IsNumeric(cell.Value) Then
-            ' Replace formula if non-numeric
-            If Left(cell.Formula, 1) = "=" Then ' Check if the cell contains a formula
-                cell.Formula = Replace(cell.Formula, "$G$1", """kk""")
-            End If
+        ' Check if the cell value is numeric
+        If IsNumeric(cell.Value) Then
+            ' Cell value is numeric
+            cell.Interior.Color = RGB(0, 255, 0)  ' Change cell background color to green
+        Else
+            ' Cell value is not numeric
+            cell.Interior.Color = RGB(255, 0, 0)  ' Change cell background color to red
         End If
     Next cell
 End Sub
