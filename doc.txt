@@ -1,19 +1,18 @@
-Sub CheckNumericValues()
+
+Sub UpdateFormula()
     Dim rng As Range
     Dim cell As Range
     
-    ' Specify the column range you want to check
-    Set rng = Range("A:A")  ' Change "A:A" to your desired column range
+    ' Select the column range dynamically
+    Set rng = Selection
+    Set rng = Range(rng, rng.End(xlDown))
     
     ' Loop through each cell in the column range
     For Each cell In rng
         ' Check if the cell value is numeric
-        If IsNumeric(cell.Value) Then
-            ' Cell value is numeric
-            cell.Interior.Color = RGB(0, 255, 0)  ' Change cell background color to green
-        Else
-            ' Cell value is not numeric
-            cell.Interior.Color = RGB(255, 0, 0)  ' Change cell background color to red
+        If Not IsNumeric(cell.Value) Then
+            ' Update the formula if the cell value is non-numeric
+            cell.Formula = Replace(cell.Formula, "$G$1", """xyz""")
         End If
     Next cell
 End Sub
