@@ -1,69 +1,30 @@
-import os
-import glob
-import pandas as pd
-
-def get_latest_file(directory, extension):
-    # Get the list of files with the specified extension in the directory
-    files = glob.glob(os.path.join(directory, f'*.{extension}'))
+Sub ReplaceFormula()
+    Dim ws As Worksheet
+    Dim lastRow As Long, i As Long
+    Dim nonNumeric As Boolean
     
-    # Sort files by modification time
-    latest_file = max(files, key=os.path.getmtime)
+    ' Specify the worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
     
-    return latest_file
-
-def generate_output(master_path, takara_path, prodman_path):
-    # Function to generate the output Excel file
-
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
-
-    # Your existing code for merging and processing the data goes here
-
-    output_filename = 'output.xlsx'
-
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        # Create a new sheet for master data without styling or new columns
-        master_stripped = master.copy()
-        # Clear formatting and properties
-        master_stripped = master_stripped.applymap(lambda x: '')
-        master_stripped.to_excel(writer, index=False, sheet_name='Master Data', header=False)
-
-        # Your existing code for other sheets goes here
-
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
-
-    # Count rows for each sheet
-    all_data_rows = len(output_df)
-    buy_data_rows = len(buy_df)
-    sell_data_rows = len(sell_df)
-
-    return all_data_rows, buy_data_rows, sell_data_rows
-
-def generate_new_excel():
-    # Function to generate the new Excel sheet
-
-    # Your existing code for generating new data and adding it to the Excel file goes here
-
-    # Count rows for each sheet
-    # Assuming you have the DataFrame 'new_excel_df' containing new data
-    new_data_rows = len(new_excel_df)
-
-    return new_data_rows
-
-# Example usage:
-directory = '/path/to/directory'
-extension = 'xlsx'
-master_path = get_latest_file(directory, extension)
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-
-all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
-new_data_count = generate_new_excel()
-
-print("All Data rows:", all_data_count)
-print("Buy Data rows:", buy_data_count)
-print("Sell Data rows:", sell_data_count)
-print("New Data rows:", new_data_count)
+    ' Find the last row with data in column A
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    
+    ' Loop through each row
+    For i = 1 To lastRow
+        nonNumeric = False ' Reset flag for each row
+        
+        ' Check if all data in the row is non-numerical
+        For Each cell In ws.Rows(i).Cells
+            If Not IsNumeric(cell.Value) Then
+                nonNumeric = True
+                Exit For
+            End If
+        Next cell
+        
+        ' If all data in the row is non-numerical, replace formula in cell $G$1
+        If nonNumeric Then
+            ws.Range("$G$1").Formula = "=IFERROR(AVERAGE(A" & i & ":F" & i & "), ""OK"")"
+            Exit For ' Assuming you want to stop after the first occurrence, remove this line if not
+        End If
+    Next i
+End Sub
