@@ -1,7 +1,7 @@
 import os
 import pathlib
 from datetime import date
-import base64
+from PIL import ImageGrab
 
 tda = date.today()
 td = tda.strftime("%d/%m/%Y")
@@ -22,18 +22,19 @@ copyrange = sheet0.Range('A1' + ":" + "L" + str(new_data_count + 1))
 copyrange.CopyPicture(Appearance=1, Format=2)
 ImageGrab.grabclipboard().save('paste0.png')
 
-# Encode images to base64 strings
-with open('paste0.png', 'rb') as img_file:
-    data0 = base64.b64encode(img_file.read()).decode('utf-8')
-with open('paste1.png', 'rb') as img_file:
-    data1 = base64.b64encode(img_file.read()).decode('utf-8')
-with open('paste2.png', 'rb') as img_file:
-    data2 = base64.b64encode(img_file.read()).decode('utf-8')
-
 outlook = client.Dispatch('Outlook.Application')
 message = outlook.CreateItem(0)
 message.To = "rohit.patil@nomura.com"
 message.Subject = "Fails Update" + " " + str(td)
+
+# Attach images as attachments
+data0_path = pathlib.Path('paste0.png')
+data1_path = pathlib.Path('paste1.png')
+data2_path = pathlib.Path('paste2.png')
+
+image0 = message.Attachments.Add(str(data0_path.absolute()), 1, 1, 'paste0.png')
+image1 = message.Attachments.Add(str(data1_path.absolute()), 1, 1, 'paste1.png')
+image2 = message.Attachments.Add(str(data2_path.absolute()), 1, 1, 'paste2.png')
 
 html_body = f"""
   <div>
@@ -41,15 +42,15 @@ html_body = f"""
   <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
   </div><br>
   <div>
-    <img src="data:image/png;base64,{data0}" width=80%>
+    <img src="cid:{image0.FileName}" width=80%>
   </div><br>
   <div>
     <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
-    <img src="data:image/png;base64,{data1}" width=310%>
+    <img src="cid:{image1.FileName}" width=310%>
   </div><br>
   <div>
     <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
-    <img src="data:image/png;base64,{data2}" width=350%>
+    <img src="cid:{image2.FileName}" width=350%>
   </div><br>
   <br>
   <br>
