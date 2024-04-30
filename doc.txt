@@ -28,3 +28,35 @@ Sub ReplaceFormula()
         End If
     Next i
 End Sub
+
+
+
+
+
+
+Sub ReplaceFormulaIfNonNumeric()
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim cell As Range
+    Dim col As Integer
+    
+    ' Specify the column number to check
+    col = 7 ' Change this to the column number you want to check (e.g., column G is 7)
+    
+    ' Set the worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
+    
+    ' Set the range to the entire column
+    Set rng = ws.Columns(col)
+    
+    ' Loop through each cell in the column
+    For Each cell In rng
+        ' Check if the cell contains non-numeric data
+        If Not IsNumeric(cell.Value) Then
+            ' Replace formula if non-numeric
+            If Left(cell.Formula, 1) = "=" Then ' Check if the cell contains a formula
+                cell.Formula = Replace(cell.Formula, "$G$1", """kk""")
+            End If
+        End If
+    Next cell
+End Sub
