@@ -1,31 +1,27 @@
-import os
 import win32com.client
+import os
 import zipfile
 
-# Function to extract excel file from zip
-def extract_excel_from_zip(zip_path, output_folder):
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        for file in zip_ref.namelist():
-            if file.endswith('.xlsx'):
-                zip_ref.extract(file, output_folder)
+def extract_zip_attachment(mail_item, save_folder):
+    attachments = mail_item.Attachments
+    for attachment in attachments:
+        if attachment.FileName.endswith('.zip'):
+            zip_path = os.path.join(save_folder, attachment.FileName)
+            attachment.SaveAsFile(zip_path)
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(save_folder)
+            os.remove(zip_path)
 
-# Function to check and process emails
-def check_and_process_emails():
+def check_mail_inbox(subject_keyword, save_folder):
     outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    inbox = outlook.GetDefaultFolder(6)  # Inbox folder
-
-    for message in inbox.Items:
-        if "fear_file" in message.Subject.lower():
-            for attachment in message.Attachments:
-                if attachment.FileName.endswith('.zip'):
-                    zip_path = os.path.join('C:\\path\\to\\save\\zip', attachment.FileName)
-                    attachment.SaveAsFile(zip_path)
-                    extract_excel_from_zip(zip_path, 'C:\\path\\to\\save\\extracted_files')
-                    os.remove(zip_path)  # Remove the zip file after extraction
-
-# Main function to run the script
-def main():
-    check_and_process_emails()
+    inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
+    messages = inbox.Items
+    messages.Sort("[ReceivedTime]", True)
+    for message in messages:
+        if subject_keyword.lower() in message.Subject.lower():
+            extract_zip_attachment(message, save_folder)
 
 if __name__ == "__main__":
-    main()
+    subject_keyword = "fear_file"
+    save_folder = r"C:\path\to\save\folder"
+    check_mail_inbox(subject_keyword, save_folder)
