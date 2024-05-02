@@ -1,32 +1,31 @@
-import win32com.client
 import os
+import win32com.client
 import zipfile
 
-# Function to extract Excel file from zip and save it to a specified folder
-def extract_excel_from_zip(zip_file_path, extract_folder):
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+# Function to extract excel file from zip
+def extract_excel_from_zip(zip_path, output_folder):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         for file in zip_ref.namelist():
             if file.endswith('.xlsx'):
-                zip_ref.extract(file, extract_folder)
+                zip_ref.extract(file, output_folder)
 
-# Connect to Outlook
-outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+# Function to check and process emails
+def check_and_process_emails():
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    inbox = outlook.GetDefaultFolder(6)  # Inbox folder
 
-# Specify the folder to check (Inbox in this case)
-inbox = outlook.GetDefaultFolder(6)
+    for message in inbox.Items:
+        if "fear_file" in message.Subject.lower():
+            for attachment in message.Attachments:
+                if attachment.FileName.endswith('.zip'):
+                    zip_path = os.path.join('C:\\path\\to\\save\\zip', attachment.FileName)
+                    attachment.SaveAsFile(zip_path)
+                    extract_excel_from_zip(zip_path, 'C:\\path\\to\\save\\extracted_files')
+                    os.remove(zip_path)  # Remove the zip file after extraction
 
-# Get messages received in the last 15 minutes
-messages = inbox.Items.Restrict("[ReceivedTime] >= '" + datetime.datetime.now() - datetime.timedelta(minutes=15) + "'")
+# Main function to run the script
+def main():
+    check_and_process_emails()
 
-# Loop through each message
-for message in messages:
-    # Check if subject contains "fear_file"
-    if "fear_file" in message.Subject.lower():
-        # Loop through attachments
-        for attachment in message.Attachments:
-            # Check if attachment is a zip file
-            if attachment.FileName.endswith('.zip'):
-                # Save zip file
-                attachment.SaveAsFile(os.path.join("path_to_save_zip", attachment.FileName))
-                # Extract Excel file from zip
-                extract_excel_from_zip(os.path.join("path_to_save_zip", attachment.FileName), "path_to_save_excel")
+if __name__ == "__main__":
+    main()
