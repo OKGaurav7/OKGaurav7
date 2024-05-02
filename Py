@@ -1,6 +1,7 @@
 import win32com.client
 import os
 import zipfile
+import datetime
 
 def extract_zip_attachment(mail_item, save_folder):
     attachments = mail_item.Attachments
@@ -17,8 +18,10 @@ def check_mail_inbox(subject_keyword, save_folder):
     inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
     messages = inbox.Items
     messages.Sort("[ReceivedTime]", True)
+    current_time = datetime.datetime.now()
+    fifteen_minutes_ago = current_time - datetime.timedelta(minutes=15)
     for message in messages:
-        if subject_keyword.lower() in message.Subject.lower():
+        if subject_keyword.lower() in message.Subject.lower() and message.ReceivedTime >= fifteen_minutes_ago:
             extract_zip_attachment(message, save_folder)
 
 if __name__ == "__main__":
