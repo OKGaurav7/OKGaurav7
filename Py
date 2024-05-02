@@ -14,16 +14,19 @@ def extract_zip_attachment(mail_item, save_folder):
             os.remove(zip_path)
 
 def check_mail_inbox(subject_keyword, save_folder):
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
-    messages = inbox.Items
-    messages.Sort("[ReceivedTime]", True)
-    today = datetime.date.today()
-    for message in messages:
-        if subject_keyword.lower() in message.Subject.lower():
-            received_date = message.ReceivedTime.date()
-            if received_date == today:
-                extract_zip_attachment(message, save_folder)
+    try:
+        outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+        inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
+        messages = inbox.Items
+        messages.Sort("[ReceivedTime]", True)
+        today = datetime.date.today()
+        for message in messages:
+            if subject_keyword.lower() in message.Subject.lower():
+                received_date = message.ReceivedTime.date()
+                if received_date == today:
+                    extract_zip_attachment(message, save_folder)
+    except Exception as e:
+        print("An error occurred while accessing Outlook:", e)
 
 if __name__ == "__main__":
     subject_keyword = "fear_file"
