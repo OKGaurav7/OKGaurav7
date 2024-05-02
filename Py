@@ -1,38 +1,32 @@
-import os
 import win32com.client
+import os
 import zipfile
-import datetime
 
-# Specify the folder to save extracted Excel files
-save_folder = "C:\\Path\\To\\Save\\Excel\\Files\\"
+# Function to extract Excel file from zip and save it to a specified folder
+def extract_excel_from_zip(zip_file_path, extract_folder):
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        for file in zip_ref.namelist():
+            if file.endswith('.xlsx'):
+                zip_ref.extract(file, extract_folder)
 
-# Create the Outlook application object
+# Connect to Outlook
 outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
 
-# Get the Inbox folder
+# Specify the folder to check (Inbox in this case)
 inbox = outlook.GetDefaultFolder(6)
 
-# Get current time
-current_time = datetime.datetime.now()
+# Get messages received in the last 15 minutes
+messages = inbox.Items.Restrict("[ReceivedTime] >= '" + datetime.datetime.now() - datetime.timedelta(minutes=15) + "'")
 
-# Calculate time 15 minutes ago
-time_15_minutes_ago = current_time - datetime.timedelta(minutes=15)
-
-# Iterate through all items in the Inbox received in the last 15 minutes
-for message in inbox.Items.Restrict("[ReceivedTime] >= '" + time_15_minutes_ago.strftime('%m/%d/%Y %H:%M:%S') + "'"):
-    # Check if the message has attachments
-    if message.Attachments.Count > 0:
+# Loop through each message
+for message in messages:
+    # Check if subject contains "fear_file"
+    if "fear_file" in message.Subject.lower():
+        # Loop through attachments
         for attachment in message.Attachments:
-            # Check if the attachment is a zip file
-            if attachment.FileName.lower().endswith('.zip'):
-                # Save the attachment to a temporary folder
-                attachment.SaveAsFile(os.path.join(os.getcwd(), 'temp.zip'))
-
-                # Extract the Excel files from the zip archive
-                with zipfile.ZipFile('temp.zip', 'r') as zip_ref:
-                    for file_name in zip_ref.namelist():
-                        if file_name.lower().endswith('.xlsx') or file_name.lower().endswith('.xls'):
-                            zip_ref.extract(file_name, save_folder)
-
-                # Delete the temporary zip file
-                os.remove('temp.zip')
+            # Check if attachment is a zip file
+            if attachment.FileName.endswith('.zip'):
+                # Save zip file
+                attachment.SaveAsFile(os.path.join("path_to_save_zip", attachment.FileName))
+                # Extract Excel file from zip
+                extract_excel_from_zip(os.path.join("path_to_save_zip", attachment.FileName), "path_to_save_excel")
