@@ -1,19 +1,2 @@
-Sub UpdateFormula()
-    Dim ws As Worksheet
-    Dim lastRow As Long
-    Dim i As Long
-    
-    ' Change "Sheet1" to the name of your worksheet
-    Set ws = ThisWorkbook.Sheets("Sheet1")
-    
-    ' Find the last row with data in column G
-    lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
-    
-    ' Loop through each cell in column G
-    For i = 1 To lastRow
-        If Not IsNumeric(ws.Cells(i, "G").Value) Or Abs(ws.Cells(i, "A").Value - ws.Cells(i, "B").Value) > 50 Then
-            ' Change the formula if the cell value is non-numeric or the difference between columns A and B is more than 50
-            ws.Cells(i, "G").Formula = "=BDP('XYZ','CSMT')"
-        End If
-    Next i
-End Sub
+    Range("G2").Select
+    Range(Selection, Selection.End(xlDown)).Select
