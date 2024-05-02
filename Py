@@ -1,3 +1,4 @@
+
 Sub UpdateFormula()
     Dim ws As Worksheet
     Dim rng As Range
@@ -13,7 +14,7 @@ Sub UpdateFormula()
     
     ' Loop through each cell in the defined range
     For Each cell In rng
-        If Not IsNumeric(cell.Value) Or Abs(ws.Cells(cell.Row, "A").Value - ws.Cells(cell.Row, "B").Value) > 50 Then
+        If IsError(cell.Value) Or Not IsNumeric(cell.Value) Or Abs(ws.Cells(cell.Row, "A").Value - ws.Cells(cell.Row, "B").Value) > 50 Then
             ' Get the original formula
             originalFormula = cell.Formula
             
