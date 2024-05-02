@@ -1,1 +1,44 @@
-Thu 5/2/2024 7:59 PM
+import win32com.client
+import os
+import zipfile
+import datetime
+import pytz
+
+def extract_zip_attachment(mail_item, save_folder):
+    attachments = mail_item.Attachments
+    for attachment in attachments:
+        if attachment.FileName.endswith('.zip'):
+            zip_path = os.path.join(save_folder, attachment.FileName)
+            attachment.SaveAsFile(zip_path)
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(save_folder)
+            os.remove(zip_path)
+
+def check_mail_inbox(subject_keyword, save_folder):
+    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
+    messages = inbox.Items
+    messages.Sort("[ReceivedTime]", True)
+    
+    # Get the current time in UTC timezone
+    current_time = datetime.datetime.now(pytz.utc)
+    
+    # Define the timezone for the email received time
+    email_timezone = pytz.timezone('Your_Email_Timezone_Here')  # Example: pytz.timezone('America/New_York')
+    
+    # Define the time range for emails to consider (15 minutes ago)
+    fifteen_minutes_ago = current_time - datetime.timedelta(minutes=15)
+    
+    for message in messages:
+        # Convert the received time to UTC timezone
+        received_time_utc = message.ReceivedTime.astimezone(pytz.utc)
+        
+        # Check if the email meets the conditions
+        if (subject_keyword.lower() in message.Subject.lower() and 
+            received_time_utc >= fifteen_minutes_ago):
+            extract_zip_attachment(message, save_folder)
+
+if __name__ == "__main__":
+    subject_keyword = "fear_file"
+    save_folder = r"C:\path\to\save\folder"
+    check_mail_inbox(subject_keyword, save_folder)
