@@ -1,22 +1,16 @@
-    Range("G2").Select
-    Range(Selection, Selection.End(xlDown)).Select
 Sub UpdateFormula()
     Dim ws As Worksheet
     Dim cell As Range
-    Dim lastRow As Long
     
     ' Change "Sheet1" to the name of your worksheet
     Set ws = ThisWorkbook.Sheets("Sheet1")
     
-    ' Find the last row with data in column G
-    lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
-    
     ' Select the range starting from G2 and going down to the last filled cell in column G
     ws.Range("G2").Select
-    Set cell = ws.Range(Selection, Selection.End(xlDown))
+    Set cell = Range(Selection, Selection.End(xlDown))
     
     ' Loop through each cell in the selected range
-    For Each cell In ws.Range("G2:G" & lastRow)
+    For Each cell In ws.Range("G2:G" & ws.Cells(ws.Rows.Count, "G").End(xlUp).Row)
         If Not IsNumeric(cell.Value) Or Abs(ws.Cells(cell.Row, "A").Value - ws.Cells(cell.Row, "B").Value) > 50 Then
             ' Change the formula if the cell value is non-numeric or the difference between columns A and B is more than 50
             cell.Formula = "=BDP('XYZ','CSMT')"
