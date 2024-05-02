@@ -1,62 +1,19 @@
-import os
-import pathlib
-from datetime import date
-from PIL import ImageGrab
-
-tda = date.today()
-td = tda.strftime("%d/%m/%Y")
-
-workbook_path = os.getcwd() + '\\output.xlsx'
-excel = client.Dispatch('Excel.Application')
-wb = excel.Workbooks.Open(workbook_path)
-sheet1 = wb.Sheets['Buy Data']
-copyrange = sheet1.Range('A1' + ":" + "R" + str(buy_data_count + 1))
-copyrange.CopyPicture(Appearance=1, Format=2)
-ImageGrab.grabclipboard().save('paste1.png')
-sheet2 = wb.Sheets['Sell Data']
-copyrange = sheet2.Range('A1' + ':' + 'R' + str(sell_data_count + 1))
-copyrange.CopyPicture(Appearance=1, Format=2)
-ImageGrab.grabclipboard().save('paste2.png')
-sheet0 = wb.Sheets['Summary']
-copyrange = sheet0.Range('A1' + ":" + "L" + str(new_data_count + 1))
-copyrange.CopyPicture(Appearance=1, Format=2)
-ImageGrab.grabclipboard().save('paste0.png')
-
-outlook = client.Dispatch('Outlook.Application')
-message = outlook.CreateItem(0)
-message.To = "rohit.patil@nomura.com"
-message.Subject = "Fails Update" + " " + str(td)
-
-# Attach images as attachments
-data0_path = pathlib.Path('paste0.png')
-data1_path = pathlib.Path('paste1.png')
-data2_path = pathlib.Path('paste2.png')
-
-image0 = message.Attachments.Add(str(data0_path.absolute()), 1, 1, 'paste0.png')
-image1 = message.Attachments.Add(str(data1_path.absolute()), 1, 1, 'paste1.png')
-image2 = message.Attachments.Add(str(data2_path.absolute()), 1, 1, 'paste2.png')
-
-html_body = f"""
-  <div>
-  <p>Hi Team,</p> 
-  <p>Please find below the updated summary of the failed trades, CBBT is used as a pricing source: </p>
-  </div><br>
-  <div>
-    <img src="cid:{image0.FileName}" width=80%>
-  </div><br>
-  <div>
-    <p>Failed trades where Nomura is short to receive in more detail (with current exposure). </p><br>
-    <img src="cid:{image1.FileName}" width=310%>
-  </div><br>
-  <div>
-    <p>And failed trades where Nomura is short to deliver (with current exposure). </p>
-    <img src="cid:{image2.FileName}" width=350%>
-  </div><br>
-  <br>
-  <br>
-  <p>Thanks,</p>
-  <p>Rohit</p>
-"""
-
-message.HTMLBody = html_body
-message.Display()
+Sub UpdateFormula()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim cell As Range
+    
+    ' Change "Sheet1" to the name of your worksheet
+    Set ws = ThisWorkbook.Sheets("Sheet1")
+    
+    ' Find the last row with data in column G
+    lastRow = ws.Cells(ws.Rows.Count, "G").End(xlUp).Row
+    
+    ' Loop through each cell in column G
+    For Each cell In ws.Range("G1:G" & lastRow)
+        If IsNumeric(cell.Value) = False Or (Abs(ws.Cells(cell.Row, "A").Value - ws.Cells(cell.Row, "B").Value) > 50) Then
+            ' Change the formula if the cell value is non-numeric or the difference between columns A and B is more than 50
+            cell.Formula = "=BDP('XYZ','CSMT')"
+        End If
+    Next cell
+End Sub
