@@ -1,34 +1,67 @@
-import win32com.client
 import os
-import zipfile
-import datetime
+import glob
+import pandas as pd
 
-def extract_zip_attachment(mail_item, save_folder):
-    attachments = mail_item.Attachments
-    for attachment in attachments:
-        if attachment.FileName.endswith('.zip'):
-            zip_path = os.path.join(save_folder, attachment.FileName)
-            attachment.SaveAsFile(zip_path)
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(save_folder)
-            os.remove(zip_path)
+def get_latest_file(directory, extension):
+    # Get the list of files with the specified extension in the directory
+    files = glob.glob(os.path.join(directory, f'*.{extension}'))
+    
+    # Sort files by modification time
+    latest_file = max(files, key=os.path.getmtime)
+    
+    return latest_file
 
-def check_mail_inbox(subject_keyword, save_folder):
-    try:
-        outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-        inbox = outlook.GetDefaultFolder(6)  # 6 refers to the Inbox folder
-        messages = inbox.Items
-        messages.Sort("[ReceivedTime]", True)
-        today = datetime.date.today()
-        for message in messages:
-            if subject_keyword.lower() in message.Subject.lower():
-                received_date = message.ReceivedTime.date()
-                if received_date == today:
-                    extract_zip_attachment(message, save_folder)
-    except Exception as e:
-        print("An error occurred while accessing Outlook:", e)
+def generate_output(master_path, takara_path, prodman_path):
+    # Function to generate the output Excel file
 
-if __name__ == "__main__":
-    subject_keyword = "fear_file"
-    save_folder = r"C:\path\to\save\folder"
-    check_mail_inbox(subject_keyword, save_folder)
+    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
+    master = pd.read_excel(master_path)
+    Takara = pd.read_excel(takara_path)
+    prodman = pd.read_excel(prodman_path)
+
+    # Your existing code for merging and processing the data goes here
+
+    # Write data to Excel file
+    with pd.ExcelWriter('ok.xlsx', mode='a') as writer:
+        # Create a new sheet for master data without styling or new columns
+        master_stripped = master.copy()
+        # Clear formatting and properties
+        master_stripped = master_stripped.applymap(lambda x: '')
+        master_stripped.to_excel(writer, index=False, sheet_name='Master Data', header=False)
+
+        # Your existing code for other sheets goes here
+
+    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
+
+    # Count rows for each sheet
+    all_data_rows = len(output_df)
+    buy_data_rows = len(buy_df)
+    sell_data_rows = len(sell_df)
+
+    return all_data_rows, buy_data_rows, sell_data_rows
+
+def generate_new_excel():
+    # Function to generate the new Excel sheet
+
+    # Your existing code for generating new data and adding it to the Excel file goes here
+
+    # Count rows for each sheet
+    # Assuming you have the DataFrame 'new_excel_df' containing new data
+    new_data_rows = len(new_excel_df)
+
+    return new_data_rows
+
+# Example usage:
+directory = '/path/to/directory'
+extension = 'xlsx'
+master_path = get_latest_file(directory, extension)
+takara_path = '/path/to/Takara.xlsx'
+prodman_path = '/path/to/prodman.xlsx'
+
+all_data_count, buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
+new_data_count = generate_new_excel()
+
+print("All Data rows:", all_data_count)
+print("Buy Data rows:", buy_data_count)
+print("Sell Data rows:", sell_data_count)
+print("New Data rows:", new_data_count)
