@@ -1,18 +1,35 @@
+import openpyxl
 
-Sub UpdateFormula()
-    Dim rng As Range
-    Dim cell As Range
+def clear_existing_data(filename):
+    # Load the workbook
+    wb = openpyxl.load_workbook(filename)
     
-    ' Select the column range dynamically
-    Set rng = Selection
-    Set rng = Range(rng, rng.End(xlDown))
+    # Delete all existing worksheets except one (for example, the first one)
+    for sheet_name in wb.sheetnames[1:]:
+        wb.remove(wb[sheet_name])
     
-    ' Loop through each cell in the column range
-    For Each cell In rng
-        ' Check if the cell value is numeric
-        If Not IsNumeric(cell.Value) Then
-            ' Update the formula if the cell value is non-numeric
-            cell.Formula = Replace(cell.Formula, "$G$1", """xyz""")
-        End If
-    Next cell
-End Sub
+    # Clear the content of the remaining worksheet
+    ws = wb.active
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.value = None
+    
+    # Save the workbook
+    wb.save(filename)
+
+# Existing code
+
+directory = r'Z:\FI E-Sales\Daily Fails\Fails files'
+extension = 'csv'
+master_path = get_latest_file(directory, extension)
+
+takara_path = r'Z:\FI E-Sales\Limit Breach\Takara.xlsx'
+prodman_path = r'Z:\FI E-Sales\Limit Breach\ProductMappingData.xlsx'
+
+# Clear existing data in the file "kk.xlsx"
+clear_existing_data('kk.xlsx')
+
+# Generate output and new Excel data
+buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)
+time.sleep(10)
+new_data_count = generate_new_excel()
