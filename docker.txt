@@ -1,49 +1,100 @@
-import pandas as pd
-import openpyxl
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Font, Border, Side, Alignment
-from openpyxl.utils import get_column_letter
-from datetime import datetime
-
-def apply_styling(ws, header_fill_color="C00000", header_font_color="FFFFFF", condition_fill_color="FFC7CE", border_color="000000"):
-    # Function to apply styling to the worksheet
-    # Your existing styling code goes here
-
-def generate_output(master_path, takara_path, prodman_path):
-    # Function to generate the output Excel file
-
-    # Read data from master.xlsx, Takara.xlsx, and prodman.xlsx
-    master = pd.read_excel(master_path)
-    Takara = pd.read_excel(takara_path)
-    prodman = pd.read_excel(prodman_path)
-
-    # Your existing code for merging and processing the data goes here
-
-    output_filename = 'output.xlsx'
-
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer:
-        output_df.to_excel(writer, index=False, sheet_name='All Data')
-
-        # Filter data where operation type is Buy
-        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
-
-        # Filter data where operation type is Sell
-        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
-
-    # Your existing code for opening Excel, adding columns, applying formulas, and styling goes here
-
 def generate_new_excel():
-    # Function to generate the new Excel sheet
+    # Read the output.xlsx file into a DataFrame
+    master = pd.read_csv(master_path, encoding='unicode_escape')
+    output_df = pd.read_excel(r'Z:\FI E-Sales\Daily Fails\Gaurav\kk.xlsx', sheet_name='All Data')
 
-    # Your existing code for generating new data and adding it to the Excel file goes here
+    unique_counterparties = output_df[['Client', 'Oblg Id']].drop_duplicates()
+    dfs = []
+    total_fails_sum = 0
+
+    # Iterate over unique counterparty names and obligorIds
+    for index, row in unique_counterparties.iterrows():
+        obligor_id = row['Oblg Id']
+        counterparty = row['Client']
+
+        cp_data = output_df[output_df['Client'] == counterparty]
+        vd = len(cp_data[cp_data['Days Elapsed'] == 0])
+        vd_plus_1 = len(cp_data[cp_data['Days Elapsed'] == 1])
+        vd_plus_2 = len(cp_data[cp_data['Days Elapsed'] == 2])
+        vd_plus_3 = len(cp_data[cp_data['Days Elapsed'] == 3])
+        vd_plus_4 = len(cp_data[cp_data['Days Elapsed'] == 4])
+        vd_plus_5 = len(cp_data[cp_data['Days Elapsed'] == 5])
+        vd_plus_6 = len(cp_data[cp_data['Days Elapsed'] == 6])
+        vd_plus_7 = len(cp_data[cp_data['Days Elapsed'] == 7])
+        vd_gt_7 = len(cp_data[cp_data['Days Elapsed'] > 7])
+
+        # Calculate total fails
+        total_fails = vd + vd_plus_1 + vd_plus_2 + vd_plus_3 + vd_plus_4 + vd_plus_5 + vd_plus_6 + vd_plus_7 + vd_gt_7
+        total_fails_sum += total_fails
+
+        # Create a DataFrame for the current counterparty
+        cp_df = pd.DataFrame({'Oblg Id': [obligor_id], 'Client': [counterparty], 'Vd': [vd], 'Vd+1': [vd_plus_1],
+                              'Vd+2': [vd_plus_2], 'Vd+3': [vd_plus_3], 'Vd+4': [vd_plus_4], 'Vd+5': [vd_plus_5],
+                              'Vd+6': [vd_plus_6], 'Vd+7': [vd_plus_7], 'Vd>7': [vd_gt_7], 'Total Fails': [total_fails]})
+
+        # Append the DataFrame to the list
+        dfs.append(cp_df)
+
+    # Concatenate all DataFrames in the list
+    new_excel_df = pd.concat(dfs, ignore_index=True)
+
+    # sum of total
+    new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '', '', 'Total', total_fails_sum]
+    output_filename = r'Z:\FI E-Sales\Daily Fails\Gaurav\kk.xlsx'
+    with pd.ExcelWriter(output_filename, mode='a', engine='openpyxl') as writer:
+        new_excel_df.to_excel(writer, index=False, sheet_name='Summary')
+        # master.to_excel(writer, index=False, sheet_name='Raw Data')
+
+    # Open the Excel file using xlsxwriter
+    wb = load_workbook(output_filename)
+    ws = wb['Summary']
+
+    # Apply styling
+    apply_styling(ws)
+    border = Border(left=Side(border_style='thin', color="000000"),
+                   right=Side(border_style='thin', color="000000"),
+                   top=Side(border_style='thin', color="000000"),
+                   bottom=Side(border_style='thin', color="000000"))
+    # Apply borders to all cells
+    for row in ws.iter_rows():
+        for cell in row:
+            if cell.value is not None:
+                cell.border = border
+
+    # Apply conditional formatting to the last cell of "Total Fails" column
+    last_row = ws.max_row
+    total_fails_cell = ws.cell(row=last_row, column=ws.max_column)
+    total_fails_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    total_fails_cell.font = Font(color="FFFFFF", bold=True)
+
+    # Apply conditional formatting to the last cell of "Vd>7" column
+    last_row = ws.max_row
+    vd_gt_7_cell = ws.cell(row=last_row, column=ws.max_column - 1)
+    vd_gt_7_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
+    vd_gt_7_cell.font = Font(color="FFFFFF", bold=True)
+
+    columns_to_format = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+6', 'Vd+7', 'Vd>7']
+    for column_name in columns_to_format:
+        column_index = None
+        for cell in ws[1]:
+            if cell.value == column_name:
+                column_index = cell.column
+                break
+
+        if column_index:
+            ws.column_dimensions[get_column_letter(column_index)].width = 6.5
+            for row in ws.iter_rows(min_row=2):
+                for cell in row:
+                    if cell.column == column_index and isinstance(cell.value, int) and cell.value > 0:
+                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+                        cell.font = Font(color="990000")
+
+    # Save the workbook
+    wb.save(output_filename)
+
+    # Close the workbook
+    wb.close()
 
 # Example usage:
-master_path = '/path/to/master.xlsx'
-takara_path = '/path/to/Takara.xlsx'
-prodman_path = '/path/to/prodman.xlsx'
-
-generate_output(master_path, takara_path, prodman_path)
+master_path = r'Z:\FI E-Sales\Daily Fails\Gaurav\out.csv'
 generate_new_excel()
