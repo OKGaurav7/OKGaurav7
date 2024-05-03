@@ -58,37 +58,27 @@ def generate_output(master_path, takara_path, prodman_path):
     output_df['CBBT_PX_ASK'] = "=" + 'BDP("' + output_df['ISIN Primary Instrument Reference'] + ' Corp",' + "G1" + ")"
     output_df['LQA (Liq Score)']= "="+'BDP("'+ output_df['ISIN Primary Instrument Reference'] + ' Corp",' + '"LQA_LIQUIDITY_SCORE")'
 
-    output_filename = r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsx'
+    output_filename = r'kk.xlsx'
     
+    # Load the existing Excel file
+    wb = load_workbook(output_filename)
+    print("Existing Excel File Opened")
 
-    # Write data to Excel file
-    with pd.ExcelWriter(output_filename) as writer  :
-        
-        # Filter data where operation type is Buy
+    # Write data to the existing Excel file
+    with pd.ExcelWriter(output_filename, engine='openpyxl', mode='a') as writer:  # mode='a' for append
         buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data', engine='xlsxwriter')
-
-        # Filter data where operation type is Sell
+        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
         sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data', engine='xlsxwriter')
-
-        output_df.to_excel(writer, index=False, sheet_name='All Data', engine='xlsxwriter')
-        Final_df.to_excel(writer, index=False, sheet_name='Raw Data', engine='xlsxwriter')
+        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+        output_df.to_excel(writer, index=False, sheet_name='All Data')
+        Final_df.to_excel(writer, index=False, sheet_name='Raw Data')
     
-
-    print("Output File Generated")
-
-    # Open excel
+    print("Output File Appended")
 
     time.sleep(10)
 
-    wb = load_workbook(output_filename)
-    print("Output File Opened")
-
     ws_all_data = wb['All Data']
-
     new_column_series_2 = pd.Series(['USD','EUR','AUD','JPY','GBP'], name='Another New Column')
-
     max_column_index = ws_all_data.max_column
 
     for idx, value in enumerate(new_column_series_2, start=1):
@@ -101,9 +91,7 @@ def generate_output(master_path, takara_path, prodman_path):
         ws_all_data.cell(row=idx, column=max_column_index + 1, value=value)
 
     ws_buy_data = wb['Buy Data']
-
     new_column_series_2 = pd.Series(['USD','EUR','AUD','JPY','GBP'], name='Another New Column')
-
     max_column_index = ws_buy_data.max_column
 
     for idx, value in enumerate(new_column_series_2, start=1):
@@ -115,11 +103,8 @@ def generate_output(master_path, takara_path, prodman_path):
     for idx, value in enumerate(new_column_series, start=1):
         ws_buy_data.cell(row=idx, column=max_column_index + 1, value=value)
 
-
     ws_sell_data = wb['Sell Data']
-
     new_column_series_2 = pd.Series(['USD','EUR','AUD','JPY','GBP'], name='Another New Column')
-
     max_column_index = ws_sell_data.max_column
 
     for idx, value in enumerate(new_column_series_2, start=1):
@@ -130,7 +115,6 @@ def generate_output(master_path, takara_path, prodman_path):
 
     for idx, value in enumerate(new_column_series, start=1):
         ws_sell_data.cell(row=idx, column=max_column_index + 1, value=value)    
-
 
     # Economic Impact formula
     for sheet in wb.sheetnames:
@@ -275,7 +259,7 @@ def generate_output(master_path, takara_path, prodman_path):
 def generate_new_excel():
     # Read the output.xlsx file into a DataFrame
     master = pd.read_csv(master_path,encoding='unicode_escape')
-    output_df = pd.read_excel(r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsx', sheet_name='All Data')
+    output_df = pd.read_excel(r'kk.xlsx', sheet_name='All Data')
     
     unique_counterparties = output_df[['Client', 'Oblg Id']].drop_duplicates()
     dfs = []
@@ -312,7 +296,7 @@ def generate_new_excel():
 
     #sum of total
     new_excel_df.loc[len(new_excel_df)] = ['', '', '', '', '', '', '', '', '','', 'Total', total_fails_sum]
-    output_filename = r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsx'
+    output_filename = r'kk.xlsx'
     with pd.ExcelWriter(output_filename, mode='a', engine='openpyxl') as writer:
         new_excel_df.to_excel(writer, index=False, sheet_name='Summary')
         #master.to_excel(writer, index=False, sheet_name='Raw Data')
@@ -324,55 +308,38 @@ def generate_new_excel():
     # Apply styling
     apply_styling(ws)
     border = Border(left=Side(border_style='thin', color="000000"),
-                right=Side(border_style='thin', color="000000"),
-                top=Side(border_style='thin', color="000000"),
-                bottom=Side(border_style='thin', color="000000"))
-            # Apply borders to all cells
+                   right=Side(border_style='thin', color="000000"),
+                   top=Side(border_style='thin', color="000000"),
+                   bottom=Side(border_style='thin', color="000000"))
     for row in ws.iter_rows():
         for cell in row:
-             if cell.value is not None:
-                cell.border = border
-                                                    
-    # Apply conditional formatting to the last cell of "Total Fails" column
-    last_row = ws.max_row
-    total_fails_cell = ws.cell(row=last_row, column=ws.max_column)
-    total_fails_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
-    total_fails_cell.font = Font(color="FFFFFF", bold=True)
+            cell.border = border
 
-    # Apply conditional formatting to the last cell of "Vd>7" column
-    last_row = ws.max_row
-    vd_gt_7_cell = ws.cell(row=last_row, column=ws.max_column - 1)
-    vd_gt_7_cell.fill = PatternFill(start_color="C00000", end_color="C00000", fill_type="solid")
-    vd_gt_7_cell.font = Font(color="FFFFFF", bold=True)
-
-  
-    columns_to_format = ['Vd', 'Vd+1', 'Vd+2', 'Vd+3', 'Vd+4', 'Vd+5', 'Vd+6', 'Vd+7', 'Vd>7']
-    for column_name in columns_to_format:  
-        column_index = None
+        # Apply conditional formatting and adjust column width
         for cell in ws[1]:
-            if cell.value == column_name:
-                column_index = cell.column
+            if cell.value == 'Client':
+                client_column = cell.column
                 break
-    
-        if column_index:
-            ws.column_dimensions[get_column_letter(column_index)].width = 6.5
-            for row in ws.iter_rows(min_row=2):
-                for cell in row:
-                    if cell.column == column_index and isinstance(cell.value, int) and cell.value > 0:
-                        cell.fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-                        cell.font = Font(color="990000")
+        if client_column:
+            ws.column_dimensions[get_column_letter(client_column)].width = 40 
+
+        # Apply conditional formatting and adjust column width
+        for cell in ws[1]:
+            if cell.value == 'Oblg Id':
+                obligor_column = cell.column
+                break
+        if obligor_column:
+            ws.column_dimensions[get_column_letter(obligor_column)].width = 20 
+
+    # Save the Excel file
     wb.save(output_filename)
-    new_data_rows = len(new_excel_df)
+    return output_filename
 
-    return new_data_rows
+# Example usage:
+master_path = r'C:\Users\path\to\master.csv'
+takara_path = r'C:\Users\path\to\takara.xlsx'
+prodman_path = r'C:\Users\path\to\prodman.xlsx'
 
-directory = r'Z:\FI E-Sales\Daily Fails\Fails files'
-extension = 'csv'
-master_path = get_latest_file(directory, extension)
-
-takara_path = r'Z:\FI E-Sales\Limit Breach\Takara.xlsx'
-prodman_path = r'Z:\FI E-Sales\Limit Breach\ProductMappingData.xlsx'
-buy_data_count, sell_data_count = generate_output(master_path, takara_path, prodman_path)    
-time.sleep(10)
-new_data_count = generate_new_excel()
+buy_rows, sell_rows = generate_output(master_path, takara_path, prodman_path)
+generate_new_excel()
 
