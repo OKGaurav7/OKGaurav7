@@ -39,3 +39,8 @@ source_file = r'path\to\abc.xlsm'
 target_file = r'path\to\output.xlsm'
 
 apply_macros(source_file, target_file)
+
+
+
+
+An error occurred: (-2147352567, 'Exception occurred.', (0, 'Microsoft Excel', 'Programmatic access to Visual Basic Project is not trusted\n', 'xlmain11.chm', 0, -2146827284), None)
