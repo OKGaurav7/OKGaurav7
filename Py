@@ -1,45 +1,18 @@
-import win32com.client
+import pandas as pd
 
-def apply_macros(source_file, target_file):
-    xl = win32com.client.Dispatch("Excel.Application")
-    xl.Visible = False  # Set to True if you want Excel to be visible during execution
-    xl.DisplayAlerts = False  # Set to False to suppress any alerts
+# Assuming output_df and Final_df are already defined
 
-    try:
-        # Open source file
-        wb_source = xl.Workbooks.Open(Filename=source_file)
+with pd.ExcelWriter(r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsm', engine='openpyxl', mode='a') as writer:
+    # Filter data where operation type is Buy
+    buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+    buy_df.to_excel(writer, index=False, sheet_name='Buy Data', startrow=0, startcol=0)
 
-        # Open target file
-        wb_target = xl.Workbooks.Open(Filename=target_file)
+    # Filter data where operation type is Sell
+    sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+    sell_df.to_excel(writer, index=False, sheet_name='Sell Data', startrow=0, startcol=0)
 
-        # Access VBA project of source file and extract macro code
-        vb_source = wb_source.VBProject
-        module_source = vb_source.VBComponents("Module1")  # Adjust module name as needed
-        macro_code = module_source.CodeModule.Lines(1, module_source.CodeModule.CountOfLines)
+    # Append output_df to 'Formatted All Data' sheet
+    output_df.to_excel(writer, index=False, sheet_name='Formatted All Data', startrow=0, startcol=0)
 
-        # Access VBA project of target file and paste macro code
-        vb_target = wb_target.VBProject
-        module_target = vb_target.VBComponents("Module1")  # Adjust module name as needed
-        module_target.CodeModule.AddFromString(macro_code)
-
-        # Save and close target file
-        wb_target.Save()
-        wb_target.Close()
-
-        # Close source file
-        wb_source.Close()
-
-    except Exception as e:
-        print("An error occurred:", str(e))
-
-    xl.Quit()
-
-# Usage example
-source_file = r'path\to\abc.xlsm'
-target_file = r'path\to\output.xlsm'
-
-apply_macros(source_file, target_file)
-
-
-
-An error occurred: (-2147352567, 'Exception occurred.', (0, 'VBAProject', 'Subscript out of range', 'C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\VBA\\VBA7.1\\1033\\VbLR6.chm', 1000009, -2146828279), None)
+    # Append Final_df to 'Raw Data' sheet
+    Final_df.to_excel(writer, index=False, sheet_name='Raw Data', startrow=0, startcol=0)
