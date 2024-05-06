@@ -1,14 +1,41 @@
-from openpyxl import load_workbook
+import win32com.client
 
-# Load the source Excel file containing the macro
-source_wb = load_workbook("source_file.xlsx", keep_vba=True)
+def apply_macros(source_file, target_file):
+    xl = win32com.client.Dispatch("Excel.Application")
+    xl.Visible = False  # Set to True if you want Excel to be visible during execution
+    xl.DisplayAlerts = False  # Set to False to suppress any alerts
 
-# Load the destination Excel file where you want to apply the macro
-dest_wb = load_workbook("destination_file.xlsx")
+    try:
+        # Open source file
+        wb_source = xl.Workbooks.Open(Filename=source_file)
 
-# Copy the VBA code from the source to the destination workbook
-for vb_component in source_wb.vba_modules:
-    dest_wb.vba_archive.append(vb_component)
+        # Open target file
+        wb_target = xl.Workbooks.Open(Filename=target_file)
 
-# Save the changes to the destination workbook
-dest_wb.save("destination_file.xlsx")
+        # Access VBA project of source file and extract macro code
+        vb_source = wb_source.VBProject
+        module_source = vb_source.VBComponents("Module1")  # Adjust module name as needed
+        macro_code = module_source.CodeModule.Lines(1, module_source.CodeModule.CountOfLines)
+
+        # Access VBA project of target file and paste macro code
+        vb_target = wb_target.VBProject
+        module_target = vb_target.VBComponents("Module1")  # Adjust module name as needed
+        module_target.CodeModule.AddFromString(macro_code)
+
+        # Save and close target file
+        wb_target.Save()
+        wb_target.Close()
+
+        # Close source file
+        wb_source.Close()
+
+    except Exception as e:
+        print("An error occurred:", str(e))
+
+    xl.Quit()
+
+# Usage example
+source_file = r'path\to\abc.xlsm'
+target_file = r'path\to\output.xlsm'
+
+apply_macros(source_file, target_file)
