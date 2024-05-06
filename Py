@@ -1,23 +1,30 @@
 import win32com.client
 
-# Path to the Excel file containing the macro
-excel_file_path = "path/to/ab.xlsm"
+def run_excel_macro(macro_file, macro_name, excel_file):
+    xl = win32com.client.Dispatch("Excel.Application")
+    xl.Visible = False  # Set to True if you want Excel to be visible during execution
+    xl.DisplayAlerts = False  # Set to False to suppress any alerts
 
-# Path to the macro file
-macro_file_path = "path/to/idk.bas"
+    try:
+        wb = xl.Workbooks.Open(Filename=macro_file)
+        xl.Application.Run("'" + macro_file + "'!" + macro_name)
+        wb.Close(SaveChanges=False)
+        
+        # Open the target workbook
+        wb_target = xl.Workbooks.Open(Filename=excel_file)
+        # Save the changes in the target workbook
+        wb_target.Save()
+        # Close the target workbook
+        wb_target.Close(SaveChanges=True)
+        
+    except Exception as e:
+        print("An error occurred:", str(e))
+    
+    xl.Quit()
 
-# Create a new instance of Excel application
-excel = win32com.client.Dispatch("Excel.Application")
+# Usage example
+macro_file = r"path\to\idk.bas"
+macro_name = "idk"
+excel_file = r"path\to\ab.xlsm"
 
-# Open the Excel workbook
-workbook = excel.Workbooks.Open(excel_file_path)
-
-# Run the macro from the external file
-excel.Run(macro_file_path + "!ModuleName.MacroName")
-
-# Save and close the workbook
-workbook.Save()
-workbook.Close()
-
-# Quit Excel application
-excel.Quit()
+run_excel_macro(macro_file, macro_name, excel_file)
