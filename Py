@@ -42,5 +42,4 @@ apply_macros(source_file, target_file)
 
 
 
-
-An error occurred: (-2147352567, 'Exception occurred.', (0, 'Microsoft Excel', 'Programmatic access to Visual Basic Project is not trusted\n', 'xlmain11.chm', 0, -2146827284), None)
+An error occurred: (-2147352567, 'Exception occurred.', (0, 'VBAProject', 'Subscript out of range', 'C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\VBA\\VBA7.1\\1033\\VbLR6.chm', 1000009, -2146828279), None)
