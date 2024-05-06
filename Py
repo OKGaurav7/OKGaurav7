@@ -1,12 +1,22 @@
-with pd.ExcelWriter(r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsm', engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer  :
-        
-        # Filter data where operation type is Buy
-        buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-        buy_df.to_excel(writer, index=False, sheet_name='Buy Data')
 
-        # Filter data where operation type is Sell
-        sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-        sell_df.to_excel(writer, index=False, sheet_name='Sell Data')
+import pandas as pd
 
-        output_df.to_excel(writer, index=False, sheet_name='Formatted All Data')
-        Final_df.to_excel(writer, index=False, sheet_name='Raw Data')
+# Load the existing Excel file
+file_path = r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsm'
+existing_sheets = pd.read_excel(file_path, sheet_name=None)
+
+with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
+    for sheet_name, df in existing_sheets.items():
+        if sheet_name == 'Buy Data':
+            # Filter data where operation type is Buy
+            buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
+            # Append data to the existing sheet
+            buy_df.to_excel(writer, index=False, sheet_name=sheet_name)
+        elif sheet_name == 'Sell Data':
+            # Filter data where operation type is Sell
+            sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
+            # Append data to the existing sheet
+            sell_df.to_excel(writer, index=False, sheet_name=sheet_name)
+        else:
+            # Append data to existing sheets
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
