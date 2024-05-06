@@ -1,22 +1,14 @@
+from openpyxl import load_workbook
 
-import pandas as pd
+# Load the source Excel file containing the macro
+source_wb = load_workbook("source_file.xlsx", keep_vba=True)
 
-# Load the existing Excel file
-file_path = r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsm'
-existing_sheets = pd.read_excel(file_path, sheet_name=None)
+# Load the destination Excel file where you want to apply the macro
+dest_wb = load_workbook("destination_file.xlsx")
 
-with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
-    for sheet_name, df in existing_sheets.items():
-        if sheet_name == 'Buy Data':
-            # Filter data where operation type is Buy
-            buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-            # Append data to the existing sheet
-            buy_df.to_excel(writer, index=False, sheet_name=sheet_name)
-        elif sheet_name == 'Sell Data':
-            # Filter data where operation type is Sell
-            sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-            # Append data to the existing sheet
-            sell_df.to_excel(writer, index=False, sheet_name=sheet_name)
-        else:
-            # Append data to existing sheets
-            df.to_excel(writer, index=False, sheet_name=sheet_name)
+# Copy the VBA code from the source to the destination workbook
+for vb_component in source_wb.vba_modules:
+    dest_wb.vba_archive.append(vb_component)
+
+# Save the changes to the destination workbook
+dest_wb.save("destination_file.xlsx")
