@@ -1,18 +1,29 @@
-import pandas as pd
+import xlwings as xw
 
-# Assuming output_df and Final_df are already defined
+# Path to the source Excel file with the macro
+source_file_path = "path/to/source_file.xlsm"
 
-with pd.ExcelWriter(r'Z:\FI E-Sales\Daily Fails\Gaurav\output.xlsm', engine='openpyxl', mode='a') as writer:
-    # Filter data where operation type is Buy
-    buy_df = output_df[output_df['Operation Type'].str.contains('BUY')]
-    buy_df.to_excel(writer, index=False, sheet_name='Buy Data', startrow=0, startcol=0)
+# Path to the destination Excel file where you want to add the macro
+destination_file_path = "path/to/destination_file.xlsm"
 
-    # Filter data where operation type is Sell
-    sell_df = output_df[output_df['Operation Type'].str.contains('SELL')]
-    sell_df.to_excel(writer, index=False, sheet_name='Sell Data', startrow=0, startcol=0)
+# Name of the macro you want to add
+macro_name = "YourMacroName"
 
-    # Append output_df to 'Formatted All Data' sheet
-    output_df.to_excel(writer, index=False, sheet_name='Formatted All Data', startrow=0, startcol=0)
+# Open the source Excel file
+source_wb = xw.Book(source_file_path)
 
-    # Append Final_df to 'Raw Data' sheet
-    Final_df.to_excel(writer, index=False, sheet_name='Raw Data', startrow=0, startcol=0)
+# Get a reference to the macro
+macro = source_wb.macro(macro_name)
+
+# Open the destination Excel file
+destination_wb = xw.Book(destination_file_path)
+
+# Add the macro to the destination Excel file
+destination_wb.add_macro(macro)
+
+# Save changes to the destination Excel file
+destination_wb.save()
+
+# Close both workbooks
+source_wb.close()
+destination_wb.close()
