@@ -10,6 +10,16 @@ output_df = pd.DataFrame(columns=df.columns)
 # Columns to retain
 columns_to_retain = ['name', 'username', 'primaryProduct_x', 'platform', 'countryCode']
 
+# Track existing rows based on the specified columns
+existing_rows = set()
+
+# Iterate over each row in the original DataFrame
+for _, row in df.iterrows():
+    # Create a key based on the specified columns
+    key = tuple(row[col] for col in columns_to_retain)
+    # Add the key to the set of existing rows
+    existing_rows.add(key)
+
 # Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
 for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
     # Get unique country codes for this group
@@ -25,16 +35,14 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
             for col in new_row.index:
                 if col not in columns_to_retain:
                     new_row[col] = ''
-            output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
-
-# Retain only the specified columns
-output_df = output_df[columns_to_retain]
+            # Check if the row already exists
+            key = tuple(new_row[col] for col in columns_to_retain)
+            if key not in existing_rows:
+                # Add the row to the output DataFrame
+                output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
 
 # Append the original DataFrame to the output DataFrame
 output_df = pd.concat([output_df, df], ignore_index=True)
-
-# Check for duplicate rows based on specified columns
-output_df = output_df.drop_duplicates(subset=columns_to_retain)
 
 # Save the output to a new CSV file
 output_df.to_csv("output.csv", index=False)
