@@ -1,21 +1,22 @@
+import numpy as np
+
 # Split the 'countryCode' column into individual country codes
 output_df['countryCode'] = output_df['countryCode'].str.split(', ')
 
 # Iterate over each row in the output DataFrame
 for index, row in output_df.iterrows():
-    # Iterate over each country code in the row
-    for country_code in row['countryCode']:
-        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the country code
-        filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
-                           (df['platform_x'] == row['platform']) & 
-                           (df['countryCode'] == country_code)]
-        # Calculate the average for each specified column
-        for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
-                    'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
-            output_df.at[index, col] = filtered_rows[col].mean()
+    # Check if 'countryCode' is a list
+    if isinstance(row['countryCode'], list):
+        # Iterate over each country code in the list
+        for country_code in row['countryCode']:
+            # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the country code
+            filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
+                               (df['platform_x'] == row['platform']) & 
+                               (df['countryCode'] == country_code)]
+            # Calculate the average for each specified column
+            for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
+                        'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
+                output_df.at[index, col] = filtered_rows[col].mean()
 
-# Calculate the average for 'tier' column
-output_df['tier'] = output_df['tier'].str.split(', ').apply(lambda x: sum(map(int, x)) / len(x) if x else 0)
-
-# Save the output to a new CSV file
-output_df.to_csv("output_with_averages.csv", index=False)
+    else:
+        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the singl
