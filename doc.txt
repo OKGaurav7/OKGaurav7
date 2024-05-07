@@ -1,30 +1,21 @@
-import pandas as pd
-from itertools import combinations
+# Split the 'countryCode' column into individual country codes
+output_df['countryCode'] = output_df['countryCode'].str.split(', ')
 
-# Read the CSV file
-df = pd.read_csv("Gap Metrics.csv")
+# Iterate over each row in the output DataFrame
+for index, row in output_df.iterrows():
+    # Iterate over each country code in the row
+    for country_code in row['countryCode']:
+        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the country code
+        filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
+                           (df['platform_x'] == row['platform']) & 
+                           (df['countryCode'] == country_code)]
+        # Calculate the average for each specified column
+        for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
+                    'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
+            output_df.at[index, col] = filtered_rows[col].mean()
 
-# Create a new DataFrame to store the output
-output_df = pd.DataFrame(columns=df.columns)
-
-# Define aggregation functions for each column
-agg_funcs = {'countryCode': lambda x: ', '.join(x.unique()),  # Join unique country codes
-             'other_column1': 'sum',  # Aggregate other columns as needed
-             'other_column2': 'mean',  # For example, sum, mean, etc.
-             'other_column3': 'max'}
-
-# Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
-for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
-    # Aggregate values of other columns for this group
-    aggregated_values = group.drop(['cNameEMA_x', 'primaryProduct_x'], axis=1).agg(agg_funcs)
-    
-    # Create a new row with the aggregated values and the current combination
-    new_row = pd.Series(index=df.columns)
-    new_row.update(aggregated_values)
-    output_df = output_df.append(new_row, ignore_index=True)
-
-# Append the original DataFrame to the output DataFrame
-output_df = pd.concat([output_df, df], ignore_index=True)
+# Calculate the average for 'tier' column
+output_df['tier'] = output_df['tier'].str.split(', ').apply(lambda x: sum(map(int, x)) / len(x) if x else 0)
 
 # Save the output to a new CSV file
-output_df.to_csv("output.csv", index=False)
+output_df.to_csv("output_with_averages.csv", index=False)
