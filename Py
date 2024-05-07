@@ -2,32 +2,36 @@ i have a csv file, with column "cNameEMA_x" ,"primaryProduct_x", "countryCode", 
 there can be multiple entry with same name in "cNameEMA_x",but each of them will have different data in other columns;
 column "countryCode" has only following entries:[All,DE,ES,FR,IT] 
 
-code such that for that name add new rows with permutation of all the "countryCode" entries 
+code such that for that name add new rows with permutation of all the "countryCode" entries that exist in the csv 
 
 example:  
-cNameEMA_x                  primaryProduct_x              countryCode               OTHER COLUMNS
-ABC                             EGB                           DE                              
-ABC                             EGB                           ES
-ABC                             Egb                           ER
-ABC                             EUR                           ES
-XYZ                             EUR                           FR
-XYZ                             EUR                           IT 
+cNameEMA_x        primaryProduct_x              countryCode               OTHER COLUMNS
+ABC                      EGB                           DE                              
+ABC                      EGB                           ES
+ABC                      EGB                           ER
+ABC                      EUR                           ES
+XYZ                       EUR                           FR
+XYZ                       EUR                           IT 
 
 
 
 
 OUTPUT:
 
-cNameEMA_x                  primaryProduct_x              countryCode               OTHER COLUMNS
-ABC                             EGB                           DE                              
-ABC                             EGB                           ES
-ABC                             EUR                           ER
-ABC                             EGB                           DE, ES  
-ABC                             EGB                           DE, ER
-ABC                             EGB                           ER, ES
-ABC                             EGB                           DE, ES, ER      
-ABC                             EUR                           ES
+cNameEMA_x         primaryProduct_x         countryCode        OTHER COLUMNS
+ABC                     EGB                   DE                              
+ABC                     EGB                   ES
+ABC                     EGR                   ER
+ABC                     EGB                   DE, ES  
+ABC                    EGB                   DE, ER
+ABC                    EGB                    ER, ES
+ABC                    EGB                    DE, ES, ER      
+ABC                    EUR                      ES
+XYZ                    EUR                    FR
+XYZ                    EUR                     IT 
+XYZ                    EUR                    FR,IT
 for all the names
 
 explaination:
-added new rows with the permutation of country code only if the other columns are same(except countryCode) ie('DE','ES','ER',"DE,ES","DE,ER", "ER, ES","DE, ES, ER" )
+added new rows with the permutation of country code only if the other columns are same(except countryCode) ieCOLUMNS WITH COUNTRYCODE AS('DE','ES','ER',"DE,ES","DE,ER", "ER, ES","DE, ES, ER" )
+in the new rows for ABC 
