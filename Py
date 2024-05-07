@@ -35,3 +35,53 @@ for all the names
 explaination:
 added new rows with the permutation of country code only if the other columns are same(except countryCode) ieCOLUMNS WITH COUNTRYCODE AS('DE','ES','ER',"DE,ES","DE,ER", "ER, ES","DE, ES, ER" )
 in the new rows for ABC 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+the columns named Shown Dv01, Hit Ratio Dv01, Fair Hit Rate Dv01, Avg Dealers Dv01, No Quote Dv01, Shown Tkts, Hit Ratio Tkts, Fair Hit Rate Tkts,Avg Dealers Tkts, No Quote Tkts, tier
+for all these columns perform a average such as fllowing example:
+
+cNameEMA_x    platform_x    countryCode  Shown Dv01  Hit Ratio Dv01  ETC
+abc               BBG          DE          5            6            
+abc                BBG         IT          4             10
+abc                bbg      DE,IT(GOT FROM  4.5          8
+                            PREVIOUS CODE)      
+
+avg(5,4)=4.5
+similarly for the all the rows and further columns, and if similarly find average for 3 or 4 country code 
+
+
+
+
+
+
+
+
