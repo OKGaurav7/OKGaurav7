@@ -7,6 +7,9 @@ df = pd.read_csv("Gap Metrics.csv")
 # Create a new DataFrame to store the output
 output_df = pd.DataFrame(columns=df.columns)
 
+# Columns to retain
+columns_to_retain = ['name', 'username', 'primaryProduct_x', 'platform', 'countryCode']
+
 # Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
 for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
     # Get unique country codes for this group
@@ -18,9 +21,14 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
             # Create a new row with the current combination
             new_row = group.iloc[0].copy()
             new_row['countryCode'] = ', '.join(comb)
-            # Set the other column to empty
-            new_row['other_column'] = ''
+            # Empty all other columns except the specified ones
+            for col in new_row.index:
+                if col not in columns_to_retain:
+                    new_row[col] = ''
             output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
+
+# Retain only the specified columns
+output_df = output_df[columns_to_retain]
 
 # Append the original DataFrame to the output DataFrame
 output_df = pd.concat([output_df, df], ignore_index=True)
