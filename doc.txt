@@ -19,4 +19,17 @@ for index, row in output_df.iterrows():
                 output_df.at[index, col] = filtered_rows[col].mean()
 
     else:
-        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the singl
+        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the single country code
+        filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
+                           (df['platform_x'] == row['platform']) & 
+                           (df['countryCode'] == row['countryCode'])]
+        # Calculate the average for each specified column
+        for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
+                    'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
+            output_df.at[index, col] = filtered_rows[col].mean()
+
+# Calculate the average for 'tier' column
+output_df['tier'] = output_df['tier'].str.split(', ').apply(lambda x: np.mean(list(map(float, x))) if x else 0)
+
+# Save the output to a new CSV file
+output_df.to_csv("output_with_averages.csv", index=False)
