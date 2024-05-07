@@ -30,4 +30,4 @@ ABC                             EUR                           ES
 for all the names
 
 explaination:
-added new rows with the permutation of country code only if the other columns are same(except countryCode)
+added new rows with the permutation of country code only if the other columns are same(except countryCode) ie('DE','ES','ER',"DE,ES","DE,ER", "ER, ES","DE, ES, ER" )
