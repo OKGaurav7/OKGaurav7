@@ -12,8 +12,8 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
     # Get unique country codes for this group
     country_codes = group['countryCode'].unique()
 
-    # Generate permutations of country codes
-    for perm in permutations(country_codes):
+    # Generate permutations of sorted country codes
+    for perm in permutations(sorted(country_codes)):
         # Create a new row with the current permutation
         new_row = group.iloc[0].copy()
         new_row['countryCode'] = ', '.join(perm)
