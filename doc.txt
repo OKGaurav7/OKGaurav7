@@ -1,4 +1,3 @@
-
 import pandas as pd
 from itertools import permutations
 
@@ -18,10 +17,10 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
         # Create a new row with the current permutation
         new_row = group.iloc[0].copy()
         new_row['countryCode'] = ', '.join(perm)
-        output_df = output_df.append(new_row, ignore_index=True)
+        output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
 
 # Append the original DataFrame to the output DataFrame
-output_df = output_df.append(df, ignore_index=True)
+output_df = pd.concat([output_df, df], ignore_index=True)
 
 # Save the output to a new CSV file
 output_df.to_csv("output.csv", index=False)
