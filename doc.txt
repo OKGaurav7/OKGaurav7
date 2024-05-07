@@ -1,35 +1,52 @@
-import numpy as np
+import pandas as pd
+from itertools import combinations
 
-# Split the 'countryCode' column into individual country codes
-output_df['countryCode'] = output_df['countryCode'].str.split(', ')
+# Read the CSV file
+df = pd.read_csv("Gap Metrics.csv")
 
-# Iterate over each row in the output DataFrame
-for index, row in output_df.iterrows():
-    # Check if 'countryCode' is a list
-    if isinstance(row['countryCode'], list):
-        # Iterate over each country code in the list
-        for country_code in row['countryCode']:
-            # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the country code
-            filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
-                               (df['platform_x'] == row['platform']) & 
-                               (df['countryCode'] == country_code)]
-            # Calculate the average for each specified column
-            for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
-                        'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
-                output_df.at[index, col] = filtered_rows[col].mean()
+# Columns to retain
+columns_to_retain = ['cNameEMA_x', 'Username', 'primaryProduct_x', 'platform_x', 'countryCode']
 
-    else:
-        # Filter the original DataFrame based on the combination of 'cNameEMA_x', 'platform_x', and the single country code
-        filtered_rows = df[(df['cNameEMA_x'] == row['cNameEMA_x']) & 
-                           (df['platform_x'] == row['platform']) & 
-                           (df['countryCode'] == row['countryCode'])]
-        # Calculate the average for each specified column
-        for col in ['Shown Dv01', 'Hit Ratio Dv01', 'Fair Hit Rate Dv01', 'Avg Dealers Dv01', 'No Quote Dv01', 
-                    'Shown Tkts', 'Hit Ratio Tkts', 'Fair Hit Rate Tkts', 'Avg Dealers Tkts', 'No Quote Tkts']:
-            output_df.at[index, col] = filtered_rows[col].mean()
+# Track existing rows based on the specified columns
+existing_rows = set()
 
-# Calculate the average for 'tier' column
-output_df['tier'] = output_df['tier'].str.split(', ').apply(lambda x: np.mean(list(map(float, x))) if x else 0)
+# Iterate over each row in the original DataFrame
+for _, row in df.iterrows():
+    # Create a key based on the specified columns
+    key = tuple(row[col] for col in columns_to_retain)
+    # Add the key to the set of existing rows
+    existing_rows.add(key)
+
+# Create a new DataFrame to store the output
+output_df = pd.DataFrame(columns=df.columns)
+
+# Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
+for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
+    # Get unique country codes for this group
+    country_codes = group['countryCode'].unique()
+    # Remove "All" from country codes
+    country_codes = [code for code in country_codes if code != 'All']
+
+    # Generate combinations of country codes
+    for r in range(1, len(country_codes) + 1):
+        for comb in combinations(country_codes, r):
+            # Create a new row with the current combination
+            new_row = group.iloc[0].copy()
+            new_row['countryCode'] = ', '.join(comb)
+            # Check if the row already exists
+            key = tuple(new_row[col] for col in columns_to_retain)
+            if key not in existing_rows:
+                # Calculate averages for the remaining columns based on the combination of country codes
+                average_row = group[group['countryCode'].isin(comb)].mean()
+                # Update the new row with the averages
+                for col in average_row.index:
+                    if col not in columns_to_retain:
+                        new_row[col] = average_row[col]
+                # Add the row to the output DataFrame
+                output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
+
+# Append the original DataFrame to the output DataFrame
+output_df = pd.concat([output_df, df], ignore_index=True)
 
 # Save the output to a new CSV file
-output_df.to_csv("output_with_averages.csv", index=False)
+output_df.to_csv("output.csv", index=False)
