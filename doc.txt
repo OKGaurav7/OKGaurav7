@@ -4,23 +4,23 @@ from itertools import permutations
 # Read the CSV file
 df = pd.read_csv("your_file.csv")
 
-# Create a new DataFrame to store the output
-output_df = pd.DataFrame(columns=df.columns)
+# Generate permutations of country codes
+country_codes = ['DE', 'ES', 'FR', 'IT']
+permutations = [p for r in range(len(country_codes)) for p in permutations(country_codes, r+1)]
 
-# Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
-for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
-    # Get unique country codes for this group
-    country_codes = group['countryCode'].unique()
+# Create a new DataFrame to store the results
+new_rows = []
 
-    # Generate permutations of sorted country codes
-    for perm in permutations(sorted(country_codes)):
-        # Create a new row with the current permutation
-        new_row = group.iloc[0].copy()
-        new_row['countryCode'] = ', '.join(perm)
-        output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
+# Iterate through each unique combination of cNameEMA_x and primaryProduct_x
+for _, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
+    for perm in permutations:
+        for country_code in perm:
+            new_row = group.iloc[0].copy()
+            new_row['countryCode'] = country_code if country_code != 'All' else ''
+            new_rows.append(new_row)
 
-# Append the original DataFrame to the output DataFrame
-output_df = pd.concat([output_df, df], ignore_index=True)
+# Concatenate the original DataFrame with the new rows
+result_df = pd.concat([df] + new_rows, ignore_index=True)
 
-# Save the output to a new CSV file
-output_df.to_csv("output.csv", index=False)
+# Save the result to a new CSV file
+result_df.to_csv("output.csv", index=False)
