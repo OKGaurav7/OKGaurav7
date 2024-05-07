@@ -15,12 +15,12 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
     # Generate combinations of country codes
     for r in range(1, len(country_codes) + 1):
         for comb in combinations(country_codes, r):
-            # Check if any of the country codes in the combination already exist in the original DataFrame
-            if not any(code in ','.join(country_codes) for code in comb):
-                # Create a new row with the current combination
-                new_row = group.iloc[0].copy()
-                new_row['countryCode'] = ', '.join(comb)
-                output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
+            # Create a new row with the current combination
+            new_row = group.iloc[0].copy()
+            new_row['countryCode'] = ', '.join(comb)
+            # Set the other column to empty
+            new_row['other_column'] = ''
+            output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
 
 # Append the original DataFrame to the output DataFrame
 output_df = pd.concat([output_df, df], ignore_index=True)
