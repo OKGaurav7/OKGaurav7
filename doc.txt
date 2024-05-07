@@ -1,30 +1,9 @@
-import pandas as pd
-from itertools import combinations
+column names: cNameEMA_x	Username	primaryProduct_x	platform_x	countryCode	Shown Dv01	Hit Ratio Dv01	Fair Hit Rate Dv01	Avg Dealers Dv01	No Quote Dv01	Shown Tkts	Hit Ratio Tkts	Fair Hit Rate Tkts	Avg Dealers Tkts	No Quote Tkts	tier
+ example:
+for above columns
+1)ABANCA BANK	All	EGB	Bloomberg	DE	3637.474224	0	0	11.87658396	0	4	0	0	10.25	0	
+2)ABANCA BANK	All	EGB	Bloomberg	ES	97011.73519	0	0	7.027680917	0.110913641	16	0	0	7.375	0.0625	
+3)ABANCA BANK	All	EGB	Bloomberg	FR	19901.61706	0	0	8.345152037	0.392121996	13	0	0	8.538461538	0.307692308	
 
-# Read the CSV file
-df = pd.read_csv("Gap Metrics.csv")
-
-# Create a new DataFrame to store the output
-output_df = pd.DataFrame(columns=df.columns)
-
-# Define aggregation functions for each column
-agg_funcs = {'countryCode': lambda x: ', '.join(x.unique()),  # Join unique country codes
-             'other_column1': 'sum',  # Aggregate other columns as needed
-             'other_column2': 'mean',  # For example, sum, mean, etc.
-             'other_column3': 'max'}
-
-# Iterate over each unique combination of 'cNameEMA_x' and 'primaryProduct_x'
-for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
-    # Aggregate values of other columns for this group
-    aggregated_values = group.drop(['cNameEMA_x', 'primaryProduct_x'], axis=1).agg(agg_funcs)
-    
-    # Create a new row with the aggregated values and the current combination
-    new_row = pd.Series(index=df.columns)
-    new_row.update(aggregated_values)
-    output_df = output_df.append(new_row, ignore_index=True)
-
-# Append the original DataFrame to the output DataFrame
-output_df = pd.concat([output_df, df], ignore_index=True)
-
-# Save the output to a new CSV file
-output_df.to_csv("output.csv", index=False)
+then in the below, all the remaing column should be filled using the average of remaing columns 
+ABANCA BANK	All	EGB	Bloomberg	DE, FR											
