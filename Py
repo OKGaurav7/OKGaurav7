@@ -148,4 +148,4 @@ then the remaing columns should take the data of rows with country code=DE+rows 
 
 
 
-
+Range("K2:K" & Range("K" & Rows.Count).End(xlUp).Row - 1).Select
