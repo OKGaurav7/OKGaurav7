@@ -1,3 +1,4 @@
+
 import pandas as pd
 from itertools import combinations
 
@@ -40,12 +41,12 @@ for index, group in df.groupby(['cNameEMA_x', 'primaryProduct_x']):
             # Check if the row already exists
             key = tuple(new_row[col] for col in columns_to_retain)
             if key not in existing_rows:
-                # Calculate the average dv_shown based on matching rows in the original DataFrame
+                # Calculate the average fair_hit based on matching rows in the original DataFrame
                 matching_rows = df[(df['cNameEMA_x'] == new_row['cNameEMA_x']) &
                                    (df['primaryProduct_x'] == new_row['primaryProduct_x']) &
                                    (df['countryCode'].isin(comb))]
-                avg_dv_shown = matching_rows['dv_shown'].mean()
-                new_row['dv_shown'] = avg_dv_shown if not pd.isnull(avg_dv_shown) else ''
+                avg_fair_hit = matching_rows['fair_hit'].mean()
+                new_row['fair_hit'] = avg_fair_hit if not pd.isnull(avg_fair_hit) else ''
                 # Add the row to the output DataFrame
                 output_df = pd.concat([output_df, pd.DataFrame([new_row])], ignore_index=True)
 
