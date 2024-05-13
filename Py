@@ -1,16 +1,8 @@
 import pandas as pd
 
-ws_all_data = wb['Formatted All Data']
+# Assuming 'df' is your DataFrame
+# Replace 'abc' and 'jkl' with your actual column names
 
-new_column_series_2 = pd.Series(['USD','EUR','AUD','JPY','GBP'], name='Another New Column')
-
-max_column_index = ws_all_data.max_column
-
-for idx, value in enumerate(new_column_series_2, start=1):
-    ws_all_data.cell(row=idx, column=max_column_index + idx, value=value)
-
-new_column_series = pd.Series(['1','=BDP("EURUSD BGN Curncy","PX_CLOSE_1D")','=BDP("AUDUSD BGN Curncy","PX_CLOSE_1D")','=BDP("JPYUSD BGN Curncy","PX_CLOSE_1D")','=BDP("GBPUSD BGN Curncy","PX_CLOSE_1D")'], name='New Column')
-max_column_index = ws_all_data.max_column
-
-for idx, value in enumerate(new_column_series, start=1):
-    ws_all_data.cell(row=idx, column=max_column_index + idx, value=value)
+for idx, row in df.iterrows():
+    if pd.isnull(row['jkl']):  # Check if 'jkl' value is empty
+        df.at[idx, 'jkl'] = row['abc']  # Replace empty 'jkl' value with 'abc' value in the same row
