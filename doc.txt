@@ -1,9 +1,1 @@
-column names: cNameEMA_x	Username	primaryProduct_x	platform_x	countryCode	Shown Dv01	Hit Ratio Dv01	Fair Hit Rate Dv01	Avg Dealers Dv01	No Quote Dv01	Shown Tkts	Hit Ratio Tkts	Fair Hit Rate Tkts	Avg Dealers Tkts	No Quote Tkts	tier
- example:
-for above columns
-1)ABANCA BANK	All	EGB	Bloomberg	DE	3637.474224	0	0	11.87658396	0	4	0	0	10.25	0	
-2)ABANCA BANK	All	EGB	Bloomberg	ES	97011.73519	0	0	7.027680917	0.110913641	16	0	0	7.375	0.0625	
-3)ABANCA BANK	All	EGB	Bloomberg	FR	19901.61706	0	0	8.345152037	0.392121996	13	0	0	8.538461538	0.307692308	
 
-then in the below, all the remaing column should be filled using the average of remaing columns 
-ABANCA BANK	All	EGB	Bloomberg	DE, FR											
